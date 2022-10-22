@@ -11,6 +11,7 @@ router.get('/getProjects', ProjectController.getAllProjects);
 router.post('/voteProject', ProjectController.voteProjects);
 router.post('/getMessage', ProjectController.getMessage);
 router.post('/addProjects', ProjectController.addProjects);
+router.post('/getVotedProject', ProjectController.getAllVotedProjects);
 
 // Book routes
 
