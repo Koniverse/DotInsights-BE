@@ -7,9 +7,6 @@ import { Vote } from '../../models/Vote';
 
 export const RANDOM_SALT = 'Please sign message to vote project. Random nonce: ';
 
-// TODO: Validate with JWT
-const API_KEY = 'subwallet_artzero_22';
-
 export const getAllProjects: RequestHandler = async (req, res) => {
   const projects = await Project.find();
   const newList = await Promise.all(
@@ -35,8 +32,9 @@ export const getAllVotedProjects: RequestHandler = async (req, res) => {
 };
 
 export const addProjects: RequestHandler = async (req, res) => {
-  const { projects, apiKey } = req.body;
-  if (apiKey !== API_KEY) res.status(400).json({ message: 'Wrong key!' });
+  // TODO: Change to upsertProjects()
+  // TODO: Use JWT instead of API KEY
+  const { projects } = req.body;
   const newList = await Promise.all(
     projects.map(async (el: any) => {
       const project = await Project.updateOne({ project_id: el.project_id }, { upsert: true, setDefaultsOnInsert: true });
@@ -47,8 +45,7 @@ export const addProjects: RequestHandler = async (req, res) => {
 };
 
 export const deleteProjects: RequestHandler = async (req, res) => {
-  const { projects, apiKey } = req.body;
-  if (apiKey !== API_KEY) res.status(400).json({ message: 'Wrong key!' });
+  const { projects } = req.body;
   const newList = await Promise.all(
     projects.map(async (el: any) => {
       const project = await Project.deleteOne({ project_id: el.project_id }, { upsert: true, setDefaultsOnInsert: true });
@@ -59,6 +56,7 @@ export const deleteProjects: RequestHandler = async (req, res) => {
 };
 
 export const voteProjects: RequestHandler = async (req, res) => {
+  // TODO: Support vote with substrate account
   const {
     project_id, signature, address, isVote
   } = req.body;
