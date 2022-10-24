@@ -43,7 +43,8 @@
       {
         "allow": [
           "oauth2_v2",
-          "user_id"
+          "user_id",
+          "project_id"
         ],
         "properties": "never"
       }

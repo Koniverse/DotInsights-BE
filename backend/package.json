@@ -1,10 +1,10 @@
 {
-  "name": "node-typescript-express-mongodb",
+  "name": "dot-insights-be",
   "version": "1.0.0",
-  "description": "Boilerplate for Node-TypeScript-Express-MongoDB",
+  "description": "Backend of DotInsights, base on https://github.com/kvvignesh/Node-TypeScript-Express-MongoDB",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kvvignesh/Node-TypeScript-Express-MongoDB"
+    "url": "https://github.com/Koniverse/Dotinsights"
   },
   "keywords": [
     "TypeScript",
@@ -17,7 +17,7 @@
     "openapi",
     "JWT"
   ],
-  "author": "K V Vignesh",
+  "author": "Koniverse",
   "scripts": {
     "eslint": "eslint src/server.ts",
     "build": "tsc",
