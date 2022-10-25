@@ -3,7 +3,7 @@ import {
 } from 'express';
 import jwt from 'jsonwebtoken';
 import Joi from '@hapi/joi';
-import { BadRequest, UnauthorizedRequest } from '../errors';
+import { ApplicationError, BadRequest, UnauthorizedRequest } from '../errors';
 import { logger } from '../logger';
 
 const getMessageFromJoiError = (error: Joi.ValidationError): string | undefined => {
@@ -64,7 +64,9 @@ export const relogRequestHandler = (
     }
   }
 
-  return handler(req, res, next).catch((err: Error) => {
+  try {
+    return handler(req, res, next);
+  } catch (err) {
     if (process.env.NODE_ENV === 'development') {
       logger.log({
         level: 'error',
@@ -73,5 +75,5 @@ export const relogRequestHandler = (
       });
     }
     next(err);
-  });
+  }
 };

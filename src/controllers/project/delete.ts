@@ -7,7 +7,7 @@ const deleteProjects: RequestHandler = async (req, res) => {
   const { projects } = req.body;
   const newList = await Promise.all(
     projects.map(async (el: any) => {
-      const project = await Project.deleteOne({ project_id: el.project_id }, { upsert: true, setDefaultsOnInsert: true });
+      const project = await Project.deleteOne({ project_id: el.project_id });
       return project;
     })
   );

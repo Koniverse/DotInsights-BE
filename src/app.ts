@@ -1,8 +1,7 @@
 import bodyParser from 'body-parser';
 import compression from 'compression';
 import path from 'path';
-import express, { Request, Response, NextFunction } from 'express';
-import { ApplicationError } from './errors/application-error';
+import express from 'express';
 import { router } from './routes';
 
 export const app = express();
