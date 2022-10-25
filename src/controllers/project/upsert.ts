@@ -1,9 +1,8 @@
 import { RequestHandler } from 'express';
 import { relogRequestHandler } from '../../middleware/request-middleware';
-import {IProject, Project} from '../../models/Project';
+import { IProject, Project } from '../../models/Project';
 
 const upsertProjects: RequestHandler = async (req, res) => {
-  // TODO: Use JWT instead of API KEY
   const { projects } = req.body;
   const newList = await Promise.all(
     projects.map(async (el: IProject) => Project.updateOne({ project_id: el.project_id }, { $set: { ...el } }, { upsert: true }))

@@ -1,13 +1,28 @@
 import { RequestHandler } from 'express';
 import { recoverPersonalSignature } from '@metamask/eth-sig-util';
+import { decodeAddress, isEthereumAddress, signatureVerify } from '@polkadot/util-crypto';
+import { u8aToHex } from '@polkadot/util';
 import { relogRequestHandler } from '../../middleware/request-middleware';
 import { RANDOM_SALT } from './index';
 import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
 
+const isValidSignature = (address: string, signedMessage: string, signature: string): boolean => {
+  if (isEthereumAddress(address)) {
+    const recoveredAddress = recoverPersonalSignature({
+      data: signedMessage,
+      signature
+    });
+    return recoveredAddress.toLocaleLowerCase() === address.toLocaleLowerCase();
+  }
+  const publicKey = decodeAddress(address);
+  const hexPublicKey = u8aToHex(publicKey);
+
+  return signatureVerify(signedMessage, signature, hexPublicKey).isValid;
+};
+
 const voteProjects: RequestHandler = async (req, res) => {
-  // TODO: Support vote with substrate account
   const {
     project_id, signature, address, isVote
   } = req.body;
@@ -20,11 +35,8 @@ const voteProjects: RequestHandler = async (req, res) => {
   const user = await User.findOne({ address });
   try {
     // Validate signature
-    const recoveredAddress = recoverPersonalSignature({
-      data: `${RANDOM_SALT} ${user.salt}`,
-      signature
-    });
-    if (recoveredAddress.toLocaleLowerCase() !== address.toLocaleLowerCase()) {
+    const signData = `${RANDOM_SALT} ${user.salt}`;
+    if (!isValidSignature(address, signData, signature)) {
       return res.status(500).json({ message: 'Wrong signature!' });
     }
     // End validate signature
@@ -47,7 +59,8 @@ const voteProjects: RequestHandler = async (req, res) => {
     project.save();
     // End update vote status
   } catch (e) {
-    console.log(e);
+    // eslint-disable-next-line no-console
+    console.error(e);
   }
 
   return res.send({ project });
