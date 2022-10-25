@@ -7,11 +7,11 @@ import * as ProjectController from './controllers/project';
 export const router = Router();
 
 // Auth routes
-router.get('/getProjects', ProjectController.getAllProjects);
-router.post('/voteProject', ProjectController.voteProjects);
-router.post('/getMessage', ProjectController.getMessage);
-router.post('/addProjects', ProjectController.addProjects);
-router.post('/getVotedProject', ProjectController.getAllVotedProjects);
+router.get('/getProjects', ProjectController.all);
+router.post('/voteProject', ProjectController.vote);
+router.post('/getMessage', ProjectController.message);
+router.post('/upsertProjects', ProjectController.upsert);
+router.post('/getVotedProject', ProjectController.allVote);
 
 // Book routes
 
