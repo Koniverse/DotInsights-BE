@@ -1,10 +1,10 @@
 import { RequestHandler } from 'express';
 import { recoverPersonalSignature } from '@metamask/eth-sig-util';
 import { relogRequestHandler } from '../../middleware/request-middleware';
+import { RANDOM_SALT } from './index';
 import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
-import { RANDOM_SALT } from './index';
 
 const voteProjects: RequestHandler = async (req, res) => {
   // TODO: Support vote with substrate account
@@ -13,7 +13,6 @@ const voteProjects: RequestHandler = async (req, res) => {
   } = req.body;
   const project = await Project.findOne({ project_id });
   const vote = await Vote.findOne({ project_id, address });
-  console.log(vote);
 
   if (!project) {
     return res.status(400).send('Not Found');
@@ -54,4 +53,4 @@ const voteProjects: RequestHandler = async (req, res) => {
   return res.send({ project });
 };
 
-export const vote = relogRequestHandler(voteProjects);
+export const vote = relogRequestHandler(voteProjects, { skipJwtAuth: true });

@@ -4,4 +4,4 @@ export { deleteProject } from './delete';
 export { vote } from './vote';
 export { message } from './messge';
 export { upsert } from './upsert';
-export { allVote } from './all_vote'
+export { allVote } from './all_vote';

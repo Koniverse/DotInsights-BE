@@ -33,4 +33,4 @@ const getMessage: RequestHandler = async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error ' });
   }
 };
-export const message = relogRequestHandler(getMessage);
+export const message = relogRequestHandler(getMessage, { skipJwtAuth: true });

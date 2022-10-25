@@ -9,4 +9,4 @@ const getAllVotedProjects: RequestHandler = async (req, res) => {
   res.send(user.votedProjects);
 };
 
-export const allVote = relogRequestHandler(getAllVotedProjects);
+export const allVote = relogRequestHandler(getAllVotedProjects, { skipJwtAuth: true });

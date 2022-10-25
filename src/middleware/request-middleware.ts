@@ -58,15 +58,15 @@ export const relogRequestHandler = (
     }
   }
   if (options?.validation?.body) {
+    // eslint-disable-next-line no-unsafe-optional-chaining
     const { error } = options?.validation?.body.validate(req.body);
     if (error != null) {
       return next(new BadRequest(getMessageFromJoiError(error)));
     }
   }
 
-  try {
-    return handler(req, res, next);
-  } catch (err) {
+  // @ts-ignore
+  return handler(req, res, next).catch((err: Error) => {
     if (process.env.NODE_ENV === 'development') {
       logger.log({
         level: 'error',
@@ -75,5 +75,5 @@ export const relogRequestHandler = (
       });
     }
     next(err);
-  }
+  });
 };

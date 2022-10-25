@@ -8,9 +8,9 @@ export const router = Router();
 
 // Auth routes
 router.get('/getProjects', ProjectController.all);
-router.post('/voteProject', ProjectController.vote);
-router.post('/getMessage', ProjectController.message);
 router.post('/upsertProjects', ProjectController.upsert);
+router.post('/getMessage', ProjectController.message);
+router.post('/voteProject', ProjectController.vote);
 router.post('/getVotedProject', ProjectController.allVote);
 
 // Book routes
