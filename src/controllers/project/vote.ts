@@ -1,9 +1,9 @@
 import { RequestHandler } from 'express';
+import { recoverPersonalSignature } from '@metamask/eth-sig-util';
 import { relogRequestHandler } from '../../middleware/request-middleware';
 import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
-import { recoverPersonalSignature } from 'eth-sig-util';
 import { RANDOM_SALT } from './index';
 
 const voteProjects: RequestHandler = async (req, res) => {
@@ -23,7 +23,7 @@ const voteProjects: RequestHandler = async (req, res) => {
     // Validate signature
     const recoveredAddress = recoverPersonalSignature({
       data: `${RANDOM_SALT} ${user.salt}`,
-      sig: signature
+      signature
     });
     if (recoveredAddress.toLocaleLowerCase() !== address.toLocaleLowerCase()) {
       return res.status(500).json({ message: 'Wrong signature!' });

@@ -1,4 +1,4 @@
-import mongoose, { ConnectionOptions } from 'mongoose';
+import mongoose, { ConnectOptions } from 'mongoose';
 import { logger } from './logger';
 
 // To use global promise for mongoose
@@ -31,10 +31,8 @@ export default class MongoConnection {
   private isConnectedBefore: boolean = false;
 
   /** Mongo connection options to be passed Mongoose */
-  private readonly mongoConnectionOptions: ConnectionOptions = {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useUnifiedTopology: true
+  private readonly mongoConnectOptions: ConnectOptions = {
+    autoCreate: true
   };
 
   /**
@@ -75,8 +73,8 @@ export default class MongoConnection {
       level: 'info',
       message: `Connecting to MongoDB at ${this.mongoUrl}`
     });
-    mongoose.connect(this.mongoUrl, this.mongoConnectionOptions).catch(() => { });
-  }
+    mongoose.connect(this.mongoUrl, this.mongoConnectOptions);
+  };
 
   /**
    * Handler called when mongo connection is established

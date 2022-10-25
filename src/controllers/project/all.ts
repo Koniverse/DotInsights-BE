@@ -20,4 +20,4 @@ const getAllProjects: RequestHandler = async (req, res) => {
   res.send({ projects: newList });
 };
 
-export const all = relogRequestHandler(getAllProjects);
+export const all = relogRequestHandler(getAllProjects, { skipJwtAuth: true });
