@@ -27,6 +27,7 @@ export interface IProject extends Document {
   'evm_compatible': string;
   'subcategory': string;
   'substrate_builders_programs': string;
+  vote_count: number;
 }
 
 interface IProjectModel extends Model<IProject> { }
@@ -55,7 +56,8 @@ const schema = new Schema({
   dotsama_investors_1: { type: 'string' },
   evm_compatible: { type: 'string' },
   subcategory: { type: 'string' },
-  substrate_builders_programs: { type: 'string' }
+  substrate_builders_programs: { type: 'string' },
+  vote_count: { type: 'number', default: 0, required: true}
 });
 
 export const Project: IProjectModel = model<IProject, IProjectModel>('Project', schema);

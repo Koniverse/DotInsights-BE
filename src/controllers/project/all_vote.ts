@@ -1,12 +1,13 @@
 import { RequestHandler } from 'express';
 import { relogRequestHandler } from '../../middleware/request-middleware';
-import { User } from '../../models/User';
+import { Vote } from '../../models/Vote';
 
 const getAllVotedProjects: RequestHandler = async (req, res) => {
   const { address } = req.body;
 
-  const user = await User.findOne({ address });
-  res.send(user.votedProjects);
+  const votes = await Vote.find({ address });
+  const votedProjects = votes.map(vote => vote.project_id);
+  res.send(votedProjects);
 };
 
 export const allVote = relogRequestHandler(getAllVotedProjects, { skipJwtAuth: true });

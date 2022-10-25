@@ -56,7 +56,7 @@ const voteProjects: RequestHandler = async (req, res) => {
       return res.status(500).json({ message: 'You voted' });
     }
     user.save();
-    project.save();
+    project.vote_count = await Vote.find({ project_id }).countDocuments();
     // End update vote status
   } catch (e) {
     // eslint-disable-next-line no-console
