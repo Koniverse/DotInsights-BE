@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import swaggerUi from 'swagger-ui-express';
-import apiSpec from '../swagger-doc.json';
+// import swaggerUi from 'swagger-ui-express';
+// import apiSpec from '../swagger-doc.json';
 
 import * as ProjectController from './controllers/project';
 
