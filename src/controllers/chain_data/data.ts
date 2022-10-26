@@ -5,9 +5,9 @@ import { relogRequestHandler } from '../../middleware/request-middleware';
 
 const https = require('https');
 
-const urlAccounts = 'https://polkadot.api.subscan.io/api/v2/scan/accounts';
-const urlTransfers = 'https://polkadot.api.subscan.io/api/v2/scan/transfers';
-const urlPolkadot = 'https://api.coingecko.com/api/v3/coins/polkadot';
+const urlAccounts = (chain: string) => `https://${chain}.api.subscan.io/api/v2/scan/accounts`;
+const urlTransfers = (chain: string) => `https://${chain}.api.subscan.io/api/v2/scan/transfers`;
+const urlPolkadot = (chain: string) => `https://api.coingecko.com/api/v3/coins/${chain}`;
 
 const { SUBSCAN_API_KEY } = process.env;
 
@@ -101,6 +101,10 @@ function httpPostRequest(method: string, url: string, body: string) {
 }
 
 const getData: RequestHandler = async (req, res) => {
+  const {
+    chain
+  } = req.params;
+
   const postData = JSON.stringify({
     row: 1,
     page: 1
@@ -112,9 +116,9 @@ const getData: RequestHandler = async (req, res) => {
     developer_data: false,
     sparkline: false
   });
-  const dataAccounts = await httpPostRequest('post', urlAccounts, postData);
-  const dataTransfers = await httpPostRequest('post', urlTransfers, postData);
-  const dataPolkadot = await httpGetRequest(urlPolkadot, dataSendPolkadot);
+  const dataAccounts = await httpPostRequest('post', urlAccounts(chain), postData);
+  const dataTransfers = await httpPostRequest('post', urlTransfers(chain), postData);
+  const dataPolkadot = await httpGetRequest(urlPolkadot(chain), dataSendPolkadot);
   // @ts-ignore
   const bodyTransfers = dataTransfers.body;
   // @ts-ignore
@@ -129,13 +133,13 @@ const getData: RequestHandler = async (req, res) => {
   // @ts-ignore
   res.send({
     accounts: bodyAccounts.data.count,
+    accounts_change_24h: 9948,
     transfers: bodyTransfers.data.count,
-    polkadot: {
-      current_price: currentPrice,
-      volume24h,
-      market_cap: marketCap,
-      market_cap_rank: marketCapRank
-    }
+    transfers_change_24h: 15448,
+    current_price: currentPrice,
+    volume24h,
+    market_cap: marketCap,
+    market_cap_rank: marketCapRank
   });
 };
 
