@@ -1,8 +1,6 @@
 import { RequestHandler } from 'express';
 import { relogRequestHandler } from '../../middleware/request-middleware';
-import { Project } from '../../models/Project';
-import { Vote } from '../../models/Vote';
-import {User} from '../../models/User';
+import { User } from '../../models/User';
 import { RANDOM_SALT } from './index';
 
 export const getRandomInt = (minNum: number, maxNum: number) => {
