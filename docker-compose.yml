@@ -29,7 +29,7 @@ services:
     volumes:
       - ./:/app
     working_dir: /app
-    command: node ./dist/src/server.js
+    command: node ./dist/server.js
     # command: tail -f /dev/null
     ports:
       - 9000:9000
