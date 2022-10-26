@@ -2,12 +2,15 @@ import { RequestHandler } from 'express';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import { Error } from 'mongoose';
 import { relogRequestHandler } from '../../middleware/request-middleware';
+import moment from 'moment';
 
 const https = require('https');
 
 const urlAccounts = (chain: string) => `https://${chain}.api.subscan.io/api/v2/scan/accounts`;
 const urlTransfers = (chain: string) => `https://${chain}.api.subscan.io/api/v2/scan/transfers`;
 const urlPolkadot = (chain: string) => `https://api.coingecko.com/api/v3/coins/${chain}`;
+const urlBlock = (chain: string) => `https://${chain}.api.subscan.io/api/scan/block`;
+const urlAccountDaily = (chain: string) => `https://${chain}.api.subscan.io/api/scan/daily`;
 
 const { SUBSCAN_API_KEY } = process.env;
 
@@ -104,7 +107,24 @@ const getData: RequestHandler = async (req, res) => {
   const {
     chain
   } = req.params;
-
+  //
+  const now = moment().utc();
+  const yesterday = moment().utc().subtract(1,'d');
+  const timeStampNow = now.unix();
+  const stringTimeNow = now.format('YYYY-MM-DD');
+  const timeStampYesterday = yesterday.unix();
+  const stringTimeYesterday = yesterday.format('YYYY-MM-DD');
+  console.log(now);
+  console.log(now.format('YYYY-MM-DD'));
+  console.log(stringTimeNow);
+  console.log(stringTimeYesterday);
+  const postDataDaily = JSON.stringify({
+    start: stringTimeYesterday,
+    end: stringTimeNow,
+    format: 'hour',
+    category: 'NewAccount'
+  });
+  // @ts-ignore
   const postData = JSON.stringify({
     row: 1,
     page: 1
@@ -116,9 +136,22 @@ const getData: RequestHandler = async (req, res) => {
     developer_data: false,
     sparkline: false
   });
-  const dataAccounts = await httpPostRequest('post', urlAccounts(chain), postData);
-  const dataTransfers = await httpPostRequest('post', urlTransfers(chain), postData);
-  const dataPolkadot = await httpGetRequest(urlPolkadot(chain), dataSendPolkadot);
+  const requestAccounts = httpPostRequest('post', urlAccounts(chain), postData);
+  const requestTransfers = httpPostRequest('post', urlTransfers(chain), postData);
+  const requestPolkadot = httpGetRequest(urlPolkadot(chain), dataSendPolkadot);
+  const requestAccountDaily = httpPostRequest('post', urlAccountDaily(chain), postDataDaily);
+  const [dataAccounts, dataTransfers, dataPolkadot, dataAccountDaily] = await Promise.all([requestAccounts, requestTransfers, requestPolkadot, requestAccountDaily]);
+  // console.log(data);
+  // @ts-ignore
+  const bodyAccountDaily = dataAccountDaily.body;
+  let accountsChange24h = 0;
+  for(const item of bodyAccountDaily.data?.list) {
+    const timeUtc = moment(item.time_utc).utc();
+    if (timeUtc.isBefore(now)) {
+      accountsChange24h += item.total;
+    }
+  }
+
   // @ts-ignore
   const bodyTransfers = dataTransfers.body;
   // @ts-ignore
@@ -133,7 +166,7 @@ const getData: RequestHandler = async (req, res) => {
   // @ts-ignore
   res.send({
     accounts: bodyAccounts.data.count,
-    accounts_change_24h: 9948,
+    accounts_change_24h: accountsChange24h,
     transfers: bodyTransfers.data.count,
     transfers_change_24h: 15448,
     current_price: currentPrice,
