@@ -1,7 +1,7 @@
-import {RequestHandler} from 'express';
-import {relogRequestHandler} from '../../middleware/request-middleware';
-import {IncomingHttpHeaders, IncomingMessage} from 'http';
-import {Error} from 'mongoose';
+import { RequestHandler } from 'express';
+import { IncomingHttpHeaders, IncomingMessage } from 'http';
+import { Error } from 'mongoose';
+import { relogRequestHandler } from '../../middleware/request-middleware';
 
 const https = require('https');
 
@@ -9,10 +9,9 @@ const urlAccounts = 'https://polkadot.api.subscan.io/api/v2/scan/accounts';
 const urlTransfers = 'https://polkadot.api.subscan.io/api/v2/scan/transfers';
 const urlPolkadot = 'https://api.coingecko.com/api/v3/coins/polkadot';
 
-const SUBSCAN_API_KEY = process.env.SUBSCAN_API_KEY;
+const { SUBSCAN_API_KEY } = process.env;
 
 function httpGetRequest(url: string, body: string) {
-
   return new Promise((resolve, reject) => {
     const clientRequest = https.get(url, {}, (incomingMessage: IncomingMessage) => {
       // Buffer the body entirely for processing as a whole.
@@ -21,10 +20,10 @@ function httpGetRequest(url: string, body: string) {
         // @ts-ignore
         bodyChunks.push(chunk);
       }).on('end', () => {
-        const body = Buffer.concat(bodyChunks);
+        const response = Buffer.concat(bodyChunks);
         // @ts-ignore
-        resolve(JSON.parse(body));
-      })
+        resolve(JSON.parse(response));
+      });
     });
     clientRequest.on('error', (error: Error) => {
       reject(error);
@@ -45,7 +44,7 @@ function httpPostRequest(method: string, url: string, body: string) {
   } catch (error) {
     throw new Error(`Invalid url ${url}`);
   }
-  let options = {
+  const options = {
     method: method.toUpperCase(),
     hostname: urlObject.hostname,
     port: urlObject.port,
@@ -53,17 +52,14 @@ function httpPostRequest(method: string, url: string, body: string) {
     dataType: 'json',
     headers: {
       'X-API-Key': SUBSCAN_API_KEY,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     }
   };
 
   return new Promise((resolve, reject) => {
-
     const clientRequest = https.request(options, (incomingMessage: IncomingMessage) => {
-
       // Response object.
-      let response: { headers: IncomingHttpHeaders; body: string[]; statusCode: number };
-      response = {
+      const response: { headers: IncomingHttpHeaders; body: string[]; statusCode: number } = {
         statusCode: incomingMessage.statusCode,
         headers: incomingMessage.headers,
         body: []
@@ -105,7 +101,6 @@ function httpPostRequest(method: string, url: string, body: string) {
 }
 
 const getData: RequestHandler = async (req, res) => {
-
   const postData = JSON.stringify({
     row: 1,
     page: 1
@@ -129,19 +124,19 @@ const getData: RequestHandler = async (req, res) => {
   const currentPrice = marketData.current_price.usd;
   const volume24h = marketData.market_cap_change_percentage_24h;
   const marketCapRank = marketData.market_cap_rank;
-  const marketcap = marketData.market_cap.usd;
+  const marketCap = marketData.market_cap.usd;
 
   // @ts-ignore
   res.send({
-    'accounts': bodyAccounts.data.count,
-    'transfers': bodyTransfers.data.count,
-    'polkadot': {
-      'currentPrice': currentPrice,
-      'volume24h': volume24h,
-      'marketcap': marketcap,
-      'market_cap_rank': marketCapRank
+    accounts: bodyAccounts.data.count,
+    transfers: bodyTransfers.data.count,
+    polkadot: {
+      current_price: currentPrice,
+      volume24h,
+      market_cap: marketCap,
+      market_cap_rank: marketCapRank
     }
   });
 };
 
-export const data = relogRequestHandler(getData, {skipJwtAuth: true});
+export const data = relogRequestHandler(getData, { skipJwtAuth: true });
