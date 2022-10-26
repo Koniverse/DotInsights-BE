@@ -21,6 +21,21 @@ services:
     networks:
       - mongo_net
 
+  worker:
+    image: node:16.18-slim
+    restart: always
+    env_file:
+      - ./.env
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: node ./dist/src/server.js
+    # command: tail -f /dev/null
+    ports:
+      - 9000:9000
+    networks:
+      - mongo_net
+
 volumes:
   mongodata:
 
