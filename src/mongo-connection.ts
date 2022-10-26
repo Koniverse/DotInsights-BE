@@ -75,6 +75,7 @@ export default class MongoConnection {
       message: `Connecting to MongoDB at ${this.mongoUrl}`
     });
     mongoose.connect(this.mongoUrl, this.mongoConnectOptions).catch((err: any) => {
+      // eslint-disable-next-line no-console
       console.error(err);
     });
   };
