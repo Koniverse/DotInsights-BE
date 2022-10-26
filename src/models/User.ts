@@ -13,7 +13,7 @@ export interface IUser extends Document {
 interface IUserModel extends Model<IUser> { }
 
 const schema = new Schema({
-  address: { type: String, required: true },
+  address: { type: String, required: true, index: true },
   salt: { type: Number, required: true },
   votedProjects: { type: [String] }
 });

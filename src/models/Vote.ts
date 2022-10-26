@@ -12,8 +12,8 @@ export interface IVote extends Document {
 interface IVoteModel extends Model<IVote> {}
 
 const schema = new Schema({
-  address: { type: String },
-  project_id: { type: String, required: true }
+  address: { type: String, index: true },
+  project_id: { type: String, required: true, index: true }
 });
 
 export const Vote: IVoteModel = model<IVote, IVoteModel>(

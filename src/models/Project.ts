@@ -33,7 +33,7 @@ export interface IProject extends Document {
 interface IProjectModel extends Model<IProject> { }
 
 const schema = new Schema({
-  project_id: { type: String, required: true },
+  project_id: { type: String, required: true, index: true },
   project: { type: 'string', required: true },
   'layer_0.1': { type: 'string' },
   layer: { type: 'string' },
