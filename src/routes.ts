@@ -6,8 +6,12 @@ import * as ProjectController from './controllers/project';
 
 export const router = Router();
 
+const cacheService = require('express-api-cache');
+
+const { cache } = cacheService;
+
 // Auth routes
-router.get('/getProjects', ProjectController.all);
+router.get('/getProjects', cache('1 minutes'), ProjectController.all);
 router.post('/upsertProjects', ProjectController.upsert);
 router.post('/getMessage', ProjectController.message);
 router.post('/voteProject', ProjectController.vote);
