@@ -32,7 +32,8 @@ export default class MongoConnection {
 
   /** Mongo connection options to be passed Mongoose */
   private readonly mongoConnectOptions: ConnectOptions = {
-    autoCreate: true
+    autoCreate: true,
+    dbName: 'dot_insights'
   };
 
   /**
@@ -73,7 +74,9 @@ export default class MongoConnection {
       level: 'info',
       message: `Connecting to MongoDB at ${this.mongoUrl}`
     });
-    mongoose.connect(this.mongoUrl, this.mongoConnectOptions);
+    mongoose.connect(this.mongoUrl, this.mongoConnectOptions).catch((err: any) => {
+      console.error(err);
+    });
   };
 
   /**
