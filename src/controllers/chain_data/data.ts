@@ -74,7 +74,7 @@ function httpPostRequest(url: string, body: string) {
         if (response.body.length) {
           try {
             // @ts-ignore
-            response.body = JSON.parse(response.body.join());
+            response.body = JSON.parse(Buffer.concat(response.body));
           } catch (error) {
             // Silently fail if response is not JSON.
           }
