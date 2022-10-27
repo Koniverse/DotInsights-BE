@@ -1,13 +1,14 @@
 import { RequestHandler } from 'express';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import { Error } from 'mongoose';
-import { relogRequestHandler } from '../../middleware/request-middleware';
 import moment from 'moment';
+import { relogRequestHandler } from '../../middleware/request-middleware';
 
 const https = require('https');
 
 const urlAccounts = (chain: string) => `https://${chain}.api.subscan.io/api/v2/scan/accounts`;
 const urlTransfers = (chain: string) => `https://${chain}.api.subscan.io/api/v2/scan/transfers`;
+const urlTransfersV1 = (chain: string) => `https://${chain}.api.subscan.io/api/scan/transfers`;
 const urlPolkadot = (chain: string) => `https://api.coingecko.com/api/v3/coins/${chain}`;
 const urlBlock = (chain: string) => `https://${chain}.api.subscan.io/api/scan/block`;
 const urlAccountDaily = (chain: string) => `https://${chain}.api.subscan.io/api/scan/daily`;
@@ -35,11 +36,7 @@ function httpGetRequest(url: string, body: string) {
   });
 }
 
-function httpPostRequest(method: string, url: string, body: string) {
-  if (!['get', 'post', 'head'].includes(method)) {
-    throw new Error(`Invalid method: ${method}`);
-  }
-
+function httpPostRequest(url: string, body: string) {
   let urlObject;
 
   try {
@@ -48,7 +45,7 @@ function httpPostRequest(method: string, url: string, body: string) {
     throw new Error(`Invalid url ${url}`);
   }
   const options = {
-    method: method.toUpperCase(),
+    method: 'POST',
     hostname: urlObject.hostname,
     port: urlObject.port,
     path: urlObject.pathname,
@@ -103,21 +100,42 @@ function httpPostRequest(method: string, url: string, body: string) {
   });
 }
 
+const getTransferChange = async (timeStamp: number, chain: string) => {
+  const dataSend = JSON.stringify({
+    block_timestamp: timeStamp,
+    only_head: true
+  });
+  const getDataBlock = await httpPostRequest(urlBlock(chain), dataSend);
+  // @ts-ignore
+  const bodyData = getDataBlock.body;
+  let blockNum = 0;
+  if (bodyData.data) {
+    blockNum = bodyData.data.block_num;
+  }
+  return new Promise((resolve, reject) => {
+    const transferDataSend = JSON.stringify({
+      row: 1,
+      page: 1,
+      from_block: blockNum
+    });
+    httpPostRequest(urlTransfersV1(chain), transferDataSend).then((data: any) => {
+      resolve(data);
+    }).catch((e: Error) => {
+      reject(e);
+    });
+  });
+};
+
 const getData: RequestHandler = async (req, res) => {
   const {
     chain
   } = req.params;
   //
   const now = moment().utc();
-  const yesterday = moment().utc().subtract(1,'d');
-  const timeStampNow = now.unix();
+  const yesterday = moment().utc().subtract(1, 'd');
   const stringTimeNow = now.format('YYYY-MM-DD');
   const timeStampYesterday = yesterday.unix();
   const stringTimeYesterday = yesterday.format('YYYY-MM-DD');
-  console.log(now);
-  console.log(now.format('YYYY-MM-DD'));
-  console.log(stringTimeNow);
-  console.log(stringTimeYesterday);
   const postDataDaily = JSON.stringify({
     start: stringTimeYesterday,
     end: stringTimeNow,
@@ -136,22 +154,28 @@ const getData: RequestHandler = async (req, res) => {
     developer_data: false,
     sparkline: false
   });
-  const requestAccounts = httpPostRequest('post', urlAccounts(chain), postData);
-  const requestTransfers = httpPostRequest('post', urlTransfers(chain), postData);
+  const requestAccounts = httpPostRequest(urlAccounts(chain), postData);
+  const requestTransfers = httpPostRequest(urlTransfers(chain), postData);
   const requestPolkadot = httpGetRequest(urlPolkadot(chain), dataSendPolkadot);
-  const requestAccountDaily = httpPostRequest('post', urlAccountDaily(chain), postDataDaily);
-  const [dataAccounts, dataTransfers, dataPolkadot, dataAccountDaily] = await Promise.all([requestAccounts, requestTransfers, requestPolkadot, requestAccountDaily]);
+  const requestAccountDaily = httpPostRequest(urlAccountDaily(chain), postDataDaily);
+  const requestTransferChange = getTransferChange(timeStampYesterday, chain);
+  const [dataAccounts, dataTransfers, dataPolkadot, dataAccountDaily, dataTransferChange] = await Promise.all([requestAccounts, requestTransfers, requestPolkadot, requestAccountDaily, requestTransferChange]);
   // console.log(data);
   // @ts-ignore
   const bodyAccountDaily = dataAccountDaily.body;
   let accountsChange24h = 0;
-  for(const item of bodyAccountDaily.data?.list) {
-    const timeUtc = moment(item.time_utc).utc();
-    if (timeUtc.isBefore(now)) {
-      accountsChange24h += item.total;
-    }
+  if (bodyAccountDaily.data && bodyAccountDaily?.data?.list.length > 0) {
+    bodyAccountDaily?.data?.list.forEach((item: any) => {
+      if (item && item.time_utc) {
+        const timeUtc = moment(item.time_utc).utc();
+        if (timeUtc.isBefore(now) && yesterday.isBefore(timeUtc)) {
+          accountsChange24h += item.total;
+        }
+      }
+    });
   }
-
+  // @ts-ignore
+  const bodyTransferChange = dataTransferChange.body;
   // @ts-ignore
   const bodyTransfers = dataTransfers.body;
   // @ts-ignore
@@ -168,7 +192,7 @@ const getData: RequestHandler = async (req, res) => {
     accounts: bodyAccounts.data.count,
     accounts_change_24h: accountsChange24h,
     transfers: bodyTransfers.data.count,
-    transfers_change_24h: 15448,
+    transfers_change_24h: bodyTransferChange.data.count,
     current_price: currentPrice,
     volume24h,
     market_cap: marketCap,
