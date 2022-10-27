@@ -69,18 +69,16 @@ function httpPostRequest(url: string, body: string) {
         // console.log(chunk);
         response.body.push(chunk);
       });
-
       // Resolve on end.
       incomingMessage.on('end', () => {
         if (response.body.length) {
           try {
             // @ts-ignore
-            response.body = JSON.parse(response.body.join());
+            response.body = JSON.parse(Buffer.concat(response.body));
           } catch (error) {
             // Silently fail if response is not JSON.
           }
         }
-
         resolve(response);
       });
     });
@@ -100,7 +98,9 @@ function httpPostRequest(url: string, body: string) {
   });
 }
 
-const getTransferChange = async (timeStamp: number, chain: string) => {
+const getTransferChange = async (chain: string) => {
+  const yesterday = moment().utc().subtract(1, 'd');
+  const timeStamp = yesterday.unix();
   const dataSend = JSON.stringify({
     block_timestamp: timeStamp,
     only_head: true
@@ -118,8 +118,120 @@ const getTransferChange = async (timeStamp: number, chain: string) => {
       page: 1,
       from_block: blockNum
     });
-    httpPostRequest(urlTransfersV1(chain), transferDataSend).then((data: any) => {
-      resolve(data);
+    httpPostRequest(urlTransfersV1(chain), transferDataSend).then((response: any) => {
+      let count = 0;
+      if (response.body.data) {
+        count = response.body.data.count;
+      }
+      resolve(count);
+    }).catch((e: Error) => {
+      reject(e);
+    });
+  });
+};
+
+const getDataAccounts = async (chain: string) => {
+  const postData = JSON.stringify({
+    row: 1,
+    page: 1
+  });
+
+  return new Promise((resolve, reject) => {
+    httpPostRequest(urlAccounts(chain), postData).then((response: any) => {
+      let count = 0;
+      if (response.body?.data) {
+        count = response.body.data.count;
+      }
+      resolve(count);
+    }).catch((e: Error) => {
+      reject(e);
+    });
+  });
+};
+
+const getDataTransfers = async (chain: string) => {
+  const postData = JSON.stringify({
+    row: 1,
+    page: 1
+  });
+
+  return new Promise((resolve, reject) => {
+    httpPostRequest(urlTransfers(chain), postData).then((response: any) => {
+      let count = 0;
+      if (response.body?.data) {
+        count = response.body.data.count;
+      }
+      resolve(count);
+    }).catch((e: Error) => {
+      reject(e);
+    });
+  });
+};
+
+const getDataPolkadot: (chain: string) => Promise<{
+  currentPrice: number,
+  volume24h: number,
+  marketCap: number,
+  marketCapRank: number
+}> = async (chain: string) => {
+  const dataSendPolkadot = JSON.stringify({
+    tickers: false,
+    market_data: true,
+    community_data: false,
+    developer_data: false,
+    sparkline: false
+  });
+
+  return new Promise((resolve, reject) => {
+    httpGetRequest(urlPolkadot(chain), dataSendPolkadot).then((response: any) => {
+      if (response) {
+        const marketData = response.market_data;
+        const currentPrice = marketData.current_price.usd;
+        const volume24h = marketData.market_cap_change_percentage_24h;
+        const marketCapRank = marketData.market_cap_rank;
+        const marketCap = marketData.market_cap.usd;
+        resolve({
+          currentPrice,
+          volume24h,
+          marketCap,
+          marketCapRank
+        });
+      }
+    }).catch((e: Error) => {
+      reject(e);
+    });
+  });
+};
+
+const getDataAccountDaily = async (chain: string) => {
+  const now = moment().utc();
+  const yesterday = moment().utc().subtract(1, 'd');
+  const stringTimeNow = now.format('YYYY-MM-DD');
+  const stringTimeYesterday = yesterday.format('YYYY-MM-DD');
+  const postDataDaily = JSON.stringify({
+    start: stringTimeYesterday,
+    end: stringTimeNow,
+    format: 'hour',
+    category: 'NewAccount'
+  });
+
+  return new Promise((resolve, reject) => {
+    httpPostRequest(urlAccountDaily(chain), postDataDaily).then((response: any) => {
+      let accountsChange24h = 0;
+      if (response.body) {
+        const { body } = response;
+        if (body.data && body?.data?.list.length > 0) {
+          body?.data?.list.forEach((item: any) => {
+            if (item && item.time_utc) {
+              const timeUtc = moment(item.time_utc).utc();
+              if (timeUtc.isBefore(now) && yesterday.isBefore(timeUtc)) {
+                accountsChange24h += item.total;
+              }
+            }
+          });
+        }
+      }
+      resolve(accountsChange24h);
     }).catch((e: Error) => {
       reject(e);
     });
@@ -131,68 +243,21 @@ const getData: RequestHandler = async (req, res) => {
     chain
   } = req.params;
   //
-  const now = moment().utc();
-  const yesterday = moment().utc().subtract(1, 'd');
-  const stringTimeNow = now.format('YYYY-MM-DD');
-  const timeStampYesterday = yesterday.unix();
-  const stringTimeYesterday = yesterday.format('YYYY-MM-DD');
-  const postDataDaily = JSON.stringify({
-    start: stringTimeYesterday,
-    end: stringTimeNow,
-    format: 'hour',
-    category: 'NewAccount'
-  });
-  // @ts-ignore
-  const postData = JSON.stringify({
-    row: 1,
-    page: 1
-  });
-  const dataSendPolkadot = JSON.stringify({
-    tickers: false,
-    market_data: true,
-    community_data: false,
-    developer_data: false,
-    sparkline: false
-  });
-  const requestAccounts = httpPostRequest(urlAccounts(chain), postData);
-  const requestTransfers = httpPostRequest(urlTransfers(chain), postData);
-  const requestPolkadot = httpGetRequest(urlPolkadot(chain), dataSendPolkadot);
-  const requestAccountDaily = httpPostRequest(urlAccountDaily(chain), postDataDaily);
-  const requestTransferChange = getTransferChange(timeStampYesterday, chain);
-  const [dataAccounts, dataTransfers, dataPolkadot, dataAccountDaily, dataTransferChange] = await Promise.all([requestAccounts, requestTransfers, requestPolkadot, requestAccountDaily, requestTransferChange]);
-  // console.log(data);
-  // @ts-ignore
-  const bodyAccountDaily = dataAccountDaily.body;
-  let accountsChange24h = 0;
-  if (bodyAccountDaily.data && bodyAccountDaily?.data?.list.length > 0) {
-    bodyAccountDaily?.data?.list.forEach((item: any) => {
-      if (item && item.time_utc) {
-        const timeUtc = moment(item.time_utc).utc();
-        if (timeUtc.isBefore(now) && yesterday.isBefore(timeUtc)) {
-          accountsChange24h += item.total;
-        }
-      }
-    });
-  }
-  // @ts-ignore
-  const bodyTransferChange = dataTransferChange.body;
-  // @ts-ignore
-  const bodyTransfers = dataTransfers.body;
-  // @ts-ignore
-  const bodyAccounts = dataAccounts.body;
-  // @ts-ignore
-  const marketData = dataPolkadot.market_data;
-  const currentPrice = marketData.current_price.usd;
-  const volume24h = marketData.market_cap_change_percentage_24h;
-  const marketCapRank = marketData.market_cap_rank;
-  const marketCap = marketData.market_cap.usd;
+  const requestAccounts = getDataAccounts(chain);
+  const requestTransfers = getDataTransfers(chain);
+  const requestPolkadot = getDataPolkadot(chain);
+  const requestAccountDaily = getDataAccountDaily(chain);
+  const requestTransferChange = getTransferChange(chain);
+  const [accounts, transfers, polkadot, accountDaily, transferChange] = await Promise.all([requestAccounts, requestTransfers, requestPolkadot, requestAccountDaily, requestTransferChange]);
+  const {
+    currentPrice, volume24h, marketCap, marketCapRank
+  } = polkadot;
 
-  // @ts-ignore
   res.send({
-    accounts: bodyAccounts.data.count,
-    accounts_change_24h: accountsChange24h,
-    transfers: bodyTransfers.data.count,
-    transfers_change_24h: bodyTransferChange.data.count,
+    accounts,
+    accounts_change_24h: accountDaily,
+    transfers,
+    transfers_change_24h: transferChange,
     current_price: currentPrice,
     volume24h,
     market_cap: marketCap,
