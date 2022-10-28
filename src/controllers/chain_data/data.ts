@@ -3,6 +3,7 @@ import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import { Error } from 'mongoose';
 import moment from 'moment';
 import { relogRequestHandler } from '../../middleware/request-middleware';
+import { ChainData } from '../../models/ChainData';
 
 const https = require('https');
 
@@ -13,7 +14,7 @@ const urlPolkadot = (chain: string) => `https://api.coingecko.com/api/v3/coins/$
 const urlBlock = (chain: string) => `https://${chain}.api.subscan.io/api/scan/block`;
 const urlAccountDaily = (chain: string) => `https://${chain}.api.subscan.io/api/scan/daily`;
 
-const { SUBSCAN_API_KEY } = process.env;
+const { SUBSCAN_API_KEY, LIMIT_UPDATE_DATA_CHAIN } = process.env;
 
 function httpGetRequest(url: string, body: string) {
   return new Promise((resolve, reject) => {
@@ -255,6 +256,30 @@ async function retryPromise(promise: any, nthTry: number) {
   }
 }
 
+const updateDataInDB = async (data: any) => {
+  const dataSave = JSON.stringify(data);
+  const now = moment().utc().subtract(LIMIT_UPDATE_DATA_CHAIN, 'minute');
+  const chainData = await ChainData.findOne({ time: { $gte: now } });
+  if (!chainData) {
+    const updateChain = await ChainData.findOne({});
+    if (updateChain) {
+      updateChain.data_save = dataSave;
+      updateChain.time = new Date();
+      updateChain.save();
+    } else {
+      ChainData.create({ data_save: dataSave });
+    }
+  }
+};
+
+const getDataInDB = async () => {
+  const dataChain = await ChainData.findOne({});
+  if (!dataChain) {
+    return {};
+  }
+  return JSON.parse(dataChain.data_save);
+};
+
 const getData: RequestHandler = async (req, res) => {
   const {
     chain
@@ -280,10 +305,12 @@ const getData: RequestHandler = async (req, res) => {
       market_cap: marketCap,
       market_cap_rank: marketCapRank
     };
+    updateDataInDB(dataSend);
     res.send(dataSend);
   } catch (error) {
     console.log('Error promise all data');
     console.log(error);
+    res.send(await getDataInDB());
   }
 };
 
