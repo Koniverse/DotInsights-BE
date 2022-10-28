@@ -186,18 +186,10 @@ const getDataPolkadot: (chain: string) => Promise<{
     httpGetRequest(urlPolkadot(chain), dataSendPolkadot).then((response: any) => {
       if (response) {
         const marketData = response.market_data;
-        let currentPrice = 0;
-        if (marketData && marketData.current_price) {
-          currentPrice = marketData.current_price.usd;
-        }
-        let volume24h = 0;
-        if (marketData && marketData.market_cap_change_percentage_24h) {
-          volume24h = marketData.market_cap_change_percentage_24h;
-        }
-        let marketCapRank = 0;
-        if (marketData && marketData.market_cap_rank) marketCapRank = marketData.market_cap_rank;
-        let marketCap = 0;
-        if (marketData && marketData.market_cap) marketCap = marketData.market_cap.usd;
+        const currentPrice = marketData?.current_price?.usd || 0;
+        const volume24h = marketData?.market_cap_change_percentage_24h || 0;
+        const marketCapRank = marketData?.market_cap_rank || 0;
+        const marketCap = marketData?.market_cap?.usd || 0;
         resolve({
           currentPrice,
           volume24h,
