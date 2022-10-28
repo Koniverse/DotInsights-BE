@@ -36,7 +36,7 @@ function httpGetRequest(url: string, body: string) {
   });
 }
 
-function httpPostRequest(url: string, body: string) {
+function querySubscanData(url: string, body: string) {
   let urlObject;
 
   try {
@@ -105,7 +105,7 @@ const getTransferChange = async (chain: string) => {
     block_timestamp: timeStamp,
     only_head: true
   });
-  const getDataBlock = await httpPostRequest(urlBlock(chain), dataSend);
+  const getDataBlock = await querySubscanData(urlBlock(chain), dataSend);
   // @ts-ignore
   const bodyData = getDataBlock.body;
   let blockNum = 0;
@@ -118,7 +118,7 @@ const getTransferChange = async (chain: string) => {
       page: 1,
       from_block: blockNum
     });
-    httpPostRequest(urlTransfersV1(chain), transferDataSend).then((response: any) => {
+    querySubscanData(urlTransfersV1(chain), transferDataSend).then((response: any) => {
       let count = 0;
       if (response.body.data) {
         count = response.body.data.count;
@@ -137,7 +137,7 @@ const getDataAccounts = async (chain: string) => {
   });
 
   return new Promise((resolve, reject) => {
-    httpPostRequest(urlAccounts(chain), postData).then((response: any) => {
+    querySubscanData(urlAccounts(chain), postData).then((response: any) => {
       let count = 0;
       if (response.body?.data) {
         count = response.body.data.count;
@@ -156,7 +156,7 @@ const getDataTransfers = async (chain: string) => {
   });
 
   return new Promise((resolve, reject) => {
-    httpPostRequest(urlTransfers(chain), postData).then((response: any) => {
+    querySubscanData(urlTransfers(chain), postData).then((response: any) => {
       let count = 0;
       if (response.body?.data) {
         count = response.body.data.count;
@@ -216,7 +216,7 @@ const getDataAccountDaily = async (chain: string) => {
   });
 
   return new Promise((resolve, reject) => {
-    httpPostRequest(urlAccountDaily(chain), postDataDaily).then((response: any) => {
+    querySubscanData(urlAccountDaily(chain), postDataDaily).then((response: any) => {
       let accountsChange24h = 0;
       if (response.body) {
         const { body } = response;
