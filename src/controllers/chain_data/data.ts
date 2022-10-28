@@ -186,10 +186,10 @@ const getDataPolkadot: (chain: string) => Promise<{
     httpGetRequest(urlPolkadot(chain), dataSendPolkadot).then((response: any) => {
       if (response) {
         const marketData = response.market_data;
-        const currentPrice = marketData.current_price.usd;
-        const volume24h = marketData.market_cap_change_percentage_24h;
-        const marketCapRank = marketData.market_cap_rank;
-        const marketCap = marketData.market_cap.usd;
+        const currentPrice = marketData?.current_price?.usd || 0;
+        const volume24h = marketData?.market_cap_change_percentage_24h || 0;
+        const marketCapRank = marketData?.market_cap_rank || 0;
+        const marketCap = marketData?.market_cap?.usd || 0;
         resolve({
           currentPrice,
           volume24h,
@@ -238,31 +238,53 @@ const getDataAccountDaily = async (chain: string) => {
   });
 };
 
+// @ts-ignore
+async function retryPromise(promise: any, nthTry: number) {
+  try {
+    // try to resolve the promise
+    const data = await promise;
+    // if resolved simply return the result back to the caller
+    return data;
+  } catch (e) {
+    // if the promise fails and we are down to 1 try we reject
+    if (nthTry === 1) {
+      return Promise.reject(e);
+    }
+    console.log('retrying', nthTry, 'time');
+    return retryPromise(promise, nthTry - 1);
+  }
+}
+
 const getData: RequestHandler = async (req, res) => {
   const {
     chain
   } = req.params;
   //
-  const requestAccounts = getDataAccounts(chain);
-  const requestTransfers = getDataTransfers(chain);
-  const requestPolkadot = getDataPolkadot(chain);
-  const requestAccountDaily = getDataAccountDaily(chain);
-  const requestTransferChange = getTransferChange(chain);
-  const [accounts, transfers, polkadot, accountDaily, transferChange] = await Promise.all([requestAccounts, requestTransfers, requestPolkadot, requestAccountDaily, requestTransferChange]);
-  const {
-    currentPrice, volume24h, marketCap, marketCapRank
-  } = polkadot;
-
-  res.send({
-    accounts,
-    accounts_change_24h: accountDaily,
-    transfers,
-    transfers_change_24h: transferChange,
-    current_price: currentPrice,
-    volume24h,
-    market_cap: marketCap,
-    market_cap_rank: marketCapRank
-  });
+  const requestAccounts = retryPromise(getDataAccounts(chain), 3);
+  const requestTransfers = retryPromise(getDataTransfers(chain), 3);
+  const requestPolkadot = retryPromise(getDataPolkadot(chain), 3);
+  const requestAccountDaily = retryPromise(getDataAccountDaily(chain), 3);
+  const requestTransferChange = retryPromise(getTransferChange(chain), 3);
+  try {
+    const [accounts, transfers, polkadot, accountDaily, transferChange] = await Promise.all([requestAccounts, requestTransfers, requestPolkadot, requestAccountDaily, requestTransferChange]);
+    const {
+      currentPrice, volume24h, marketCap, marketCapRank
+    } = polkadot;
+    const dataSend = {
+      accounts,
+      accounts_change_24h: accountDaily,
+      transfers,
+      transfers_change_24h: transferChange,
+      current_price: currentPrice,
+      volume24h,
+      market_cap: marketCap,
+      market_cap_rank: marketCapRank
+    };
+    res.send(dataSend);
+  } catch (error) {
+    console.log('Error promise all data');
+    console.log(error);
+  }
 };
 
 export const data = relogRequestHandler(getData, { skipJwtAuth: true });
