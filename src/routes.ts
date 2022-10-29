@@ -15,7 +15,6 @@ const { cache } = cacheService;
 router.get('/getProjects', ProjectController.all);
 // router.post('/upsertProjects', ProjectController.upsert);
 router.post('/getMessage', ProjectController.message);
-router.post('/voteProject', ProjectController.vote);
 router.post('/toggleVoteProject', ProjectController.toggleVote);
 router.post('/getVotedProject', ProjectController.allVote);
 router.get('/chainData/:chain', cache('1 minutes'), ChainDataController.data);

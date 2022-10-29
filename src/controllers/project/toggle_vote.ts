@@ -7,7 +7,20 @@ import { RANDOM_SALT } from './index';
 import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
-import { isValidSignature } from './vote';
+
+const isValidSignature = (address: string, signedMessage: string, signature: string): boolean => {
+  if (isEthereumAddress(address)) {
+    const recoveredAddress = recoverPersonalSignature({
+      data: signedMessage,
+      signature
+    });
+    return recoveredAddress.toLocaleLowerCase() === address.toLocaleLowerCase();
+  }
+  const publicKey = decodeAddress(address);
+  const hexPublicKey = u8aToHex(publicKey);
+
+  return signatureVerify(signedMessage, signature, hexPublicKey).isValid;
+};
 
 const toggleVoteProjects: RequestHandler = async (req, res) => {
   const {
@@ -27,15 +40,19 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
 
   try {
     // Validate signature
-    const signData = `${RANDOM_SALT} ${user.salt}`;
-    if (!isValidSignature(address, signData, signature)) {
+    // TODO: Remove this check old sign data after FE update new signature api
+    const oldSignMessage = `${RANDOM_SALT} ${user.salt}`;
+    const signMessage = `${RANDOM_SALT} ${user.salt}-${project_id}`;
+    if (!isValidSignature(address, oldSignMessage, signature) && !isValidSignature(address, signMessage, signature)) {
       return res.status(500).json({ message: 'Wrong signature!' });
     }
     // End validate signature
 
     // Toggle vote
     if (!vote) {
-      const newVote = await Vote.create({ project_id, address });
+      const newVote = await Vote.create({
+        project_id, address, signMessage, signature
+      });
 
       newVote.save();
     } else {
