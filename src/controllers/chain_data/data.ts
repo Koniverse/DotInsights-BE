@@ -14,7 +14,8 @@ const urlPolkadot = (chain: string) => `https://api.coingecko.com/api/v3/coins/$
 const urlBlock = (chain: string) => `https://${chain}.api.subscan.io/api/scan/block`;
 const urlAccountDaily = (chain: string) => `https://${chain}.api.subscan.io/api/scan/daily`;
 
-const { SUBSCAN_API_KEY, LIMIT_UPDATE_DATA_CHAIN } = process.env;
+const SUBSCAN_API_KEY = process.env.SUBSCAN_API_KEY || '';
+const LIMIT_UPDATE_DATA_CHAIN = process.env.LIMIT_UPDATE_DATA_CHAIN || 10;
 
 function httpGetRequest(url: string, body: string) {
   return new Promise((resolve, reject) => {
@@ -258,8 +259,8 @@ async function retryPromise(promise: any, nthTry: number) {
 
 const updateDataInDB = async (data: any) => {
   const dataSave = JSON.stringify(data);
-  const now = moment().utc().subtract(LIMIT_UPDATE_DATA_CHAIN, 'minute');
-  const chainData = await ChainData.findOne({ time: { $gte: now } });
+  const minimumTimeUpdate = moment().utc().subtract(LIMIT_UPDATE_DATA_CHAIN, 'minute');
+  const chainData = await ChainData.findOne({ time: { $gte: minimumTimeUpdate } });
   if (!chainData) {
     const updateChain = await ChainData.findOne({});
     if (updateChain) {
