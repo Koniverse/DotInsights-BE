@@ -17,6 +17,7 @@ router.get('/getProjects', ProjectController.all);
 router.post('/getMessage', ProjectController.message);
 router.post('/toggleVoteProject', ProjectController.toggleVote);
 router.post('/getVotedProject', ProjectController.allVote);
+router.get('/getAllVotedProject', ProjectController.allVoteProject);
 router.get('/chainData/:chain', cache('1 minutes'), ChainDataController.data);
 
 // if (process.env.NODE_ENV === 'development') {
