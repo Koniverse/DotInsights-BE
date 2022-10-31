@@ -259,8 +259,8 @@ async function retryPromise(promise: any, nthTry: number) {
 
 const updateDataInDB = async (data: any) => {
   const dataSave = JSON.stringify(data);
-  const minimumTimeUpdate = moment().utc().subtract(LIMIT_UPDATE_DATA_CHAIN, 'minute');
-  const chainData = await ChainData.findOne({ time: { $gte: minimumTimeUpdate } });
+  const fromTime = moment().utc().subtract(LIMIT_UPDATE_DATA_CHAIN, 'minute');
+  const chainData = await ChainData.findOne({ time: { $gte: fromTime } });
   if (!chainData) {
     const updateChain = await ChainData.findOne({});
     if (updateChain) {
