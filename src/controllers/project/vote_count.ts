@@ -2,7 +2,7 @@ import { RequestHandler } from 'express';
 import { relogRequestHandler } from '../../middleware/request-middleware';
 import { Vote } from '../../models/Vote';
 
-const getAllVoteProjects: RequestHandler = async (req, res) => {
+const getVoteCount: RequestHandler = async (req, res) => {
   const dataVoteCount = await Vote.aggregate([
     { $unwind: '$project_id' },
     { $group: { _id: '$project_id', count: { $sum: 1 } } },
@@ -25,4 +25,4 @@ const getAllVoteProjects: RequestHandler = async (req, res) => {
     res.send({});
   }
 };
-export const allVoteProject = relogRequestHandler(getAllVoteProjects, { skipJwtAuth: true });
+export const voteCount = relogRequestHandler(getVoteCount, { skipJwtAuth: true });
