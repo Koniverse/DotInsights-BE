@@ -2,8 +2,11 @@ import { RequestHandler } from 'express';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import { Error } from 'mongoose';
 import moment from 'moment';
+// @ts-ignore
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { relogRequestHandler } from '../../middleware/request-middleware';
-import { ChainData } from '../../models/ChainData';
+// eslint-disable-next-line import/no-extraneous-dependencies
+const chainCache = require('memory-cache');
 
 const https = require('https');
 
@@ -257,28 +260,22 @@ async function retryPromise(promise: any, nthTry: number) {
   }
 }
 
-const updateDataInDB = async (data: any) => {
-  const dataSave = JSON.stringify(data);
-  const fromTime = moment().utc().subtract(LIMIT_UPDATE_DATA_CHAIN, 'minute');
-  const chainData = await ChainData.findOne({ time: { $gte: fromTime } });
-  if (!chainData) {
-    const updateChain = await ChainData.findOne({});
-    if (updateChain) {
-      updateChain.data_save = dataSave;
-      updateChain.time = new Date();
-      updateChain.save();
-    } else {
-      ChainData.create({ data_save: dataSave });
-    }
-  }
+const getNameCacheWithChain = (chain: string) => `KEY_CACHE_WITH_${chain}`;
+
+const getDataInCache = (chain:string) => {
+  const keyName = getNameCacheWithChain(chain);
+  if (chainCache.get(keyName)) return JSON.parse(chainCache.get(keyName));
+  return null;
 };
 
-const getDataInDB = async () => {
-  const dataChain = await ChainData.findOne({});
-  if (!dataChain) {
-    return {};
+const updateDataToCache = async (data: any, chain: string) => {
+  const timeOutCache = Number(LIMIT_UPDATE_DATA_CHAIN) * 60 * 1000;
+  const keyName = getNameCacheWithChain(chain);
+  const dataSave = JSON.stringify(data);
+  const cacheData = getDataInCache(chain);
+  if (!cacheData) {
+    chainCache.put(keyName, dataSave, timeOutCache);
   }
-  return JSON.parse(dataChain.data_save);
 };
 
 const getData: RequestHandler = async (req, res) => {
@@ -306,12 +303,14 @@ const getData: RequestHandler = async (req, res) => {
       market_cap: marketCap,
       market_cap_rank: marketCapRank
     };
-    updateDataInDB(dataSend);
+    updateDataToCache(dataSend, chain);
     res.send(dataSend);
   } catch (error) {
     console.log('Error promise all data');
     console.log(error);
-    res.send(await getDataInDB());
+    const dataSendToClient = getDataInCache(chain);
+    console.log(dataSendToClient);
+    res.send(dataSendToClient);
   }
 };
 
