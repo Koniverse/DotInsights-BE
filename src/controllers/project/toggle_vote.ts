@@ -22,48 +22,53 @@ const isValidSignature = (address: string, signedMessage: string, signature: str
   return signatureVerify(signedMessage, signature, hexPublicKey).isValid;
 };
 
-const voteProjects: RequestHandler = async (req, res) => {
+const toggleVoteProjects: RequestHandler = async (req, res) => {
   const {
-    project_id, signature, address, isVote
+    project_id, signature, address
   } = req.body;
   const project = await Project.findOne({ project_id });
   const vote = await Vote.findOne({ project_id, address });
 
   if (!project) {
-    return res.status(400).send('Not Found');
+    return res.status(404).send('Project Not Found');
   }
   const user = await User.findOne({ address });
+
+  if (!user) {
+    return res.status(404).send('User Not Found');
+  }
+
   try {
     // Validate signature
-    const signData = `${RANDOM_SALT} ${user.salt}`;
-    if (!isValidSignature(address, signData, signature)) {
+    // TODO: Remove this check old sign data after FE update new signature api
+    const oldSignMessage = `${RANDOM_SALT} ${user.salt}`;
+    const signMessage = `${RANDOM_SALT} ${user.salt}-${project_id}`;
+    if (!isValidSignature(address, oldSignMessage, signature) && !isValidSignature(address, signMessage, signature)) {
       return res.status(500).json({ message: 'Wrong signature!' });
     }
     // End validate signature
 
-    // Update vote status
-    if (!isVote) {
-      if (vote) {
-        await Vote.deleteOne({ project_id, address });
-        user.votedProjects.splice(user.votedProjects.indexOf(project_id), 1);
-      }
-    } else if (!vote) {
-      const newVote = await Vote.create({ project_id, address });
-      user.votedProjects.push(project_id);
+    // Toggle vote
+    if (!vote) {
+      const newVote = await Vote.create({
+        project_id, address, signMessage, signature
+      });
 
       newVote.save();
     } else {
-      return res.status(500).json({ message: 'You voted' });
+      await Vote.deleteOne({ _id: vote._id });
     }
-    user.save();
     project.vote_count = await Vote.find({ project_id }).countDocuments();
-    // End update vote status
+    project.save();
+    // End toggle Vote
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error(e);
   }
 
-  return res.send({ project });
+  return res.send({
+    project_id: project.project_id, vote_count: project.vote_count, address: user.address, isVote: !vote
+  });
 };
 
-export const vote = relogRequestHandler(voteProjects, { skipJwtAuth: true });
+export const toggleVote = relogRequestHandler(toggleVoteProjects, { skipJwtAuth: true });
