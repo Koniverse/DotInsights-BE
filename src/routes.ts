@@ -18,6 +18,7 @@ router.post('/getMessage', ProjectController.message);
 router.post('/toggleVoteProject', ProjectController.toggleVote);
 router.post('/getVotedProject', ProjectController.allVote);
 router.get('/chainData/:chain', cache('1 minutes'), ChainDataController.data);
+router.get('/getVoteCount', ProjectController.voteCount);
 
 // if (process.env.NODE_ENV === 'development') {
 //   router.use('/dev/api-docs', swaggerUi.serve);
