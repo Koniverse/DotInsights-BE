@@ -2,12 +2,10 @@ import { RequestHandler } from 'express';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import { Error } from 'mongoose';
 import moment from 'moment';
-// @ts-ignore
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { relogRequestHandler } from '../../middleware/request-middleware';
-// eslint-disable-next-line import/no-extraneous-dependencies
-const chainCache = require('memory-cache');
 
+import { relogRequestHandler } from '../../middleware/request-middleware';
+
+const chainCache = require('memory-cache');
 const https = require('https');
 
 const urlAccounts = (chain: string) => `https://${chain}.api.subscan.io/api/v2/scan/accounts`;
@@ -255,6 +253,7 @@ async function retryPromise(promise: any, nthTry: number) {
     if (nthTry === 1) {
       return Promise.reject(e);
     }
+    // eslint-disable-next-line no-console
     console.log('retrying', nthTry, 'time');
     return retryPromise(promise, nthTry - 1);
   }
@@ -306,9 +305,12 @@ const getData: RequestHandler = async (req, res) => {
     updateDataToCache(dataSend, chain);
     res.send(dataSend);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.log('Error promise all data');
-    console.log(error);
+    // eslint-disable-next-line no-console
+    console.error(error);
     const dataSendToClient = getDataInCache(chain);
+    // eslint-disable-next-line no-console
     console.log(dataSendToClient);
     res.send(dataSendToClient);
   }
