@@ -2,8 +2,10 @@ import { RequestHandler } from 'express';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import { Error } from 'mongoose';
 import moment from 'moment';
+
 import { relogRequestHandler } from '../../middleware/request-middleware';
 
+const chainCache = require('memory-cache');
 const https = require('https');
 
 const urlAccounts = (chain: string) => `https://${chain}.api.subscan.io/api/v2/scan/accounts`;
@@ -13,7 +15,8 @@ const urlPolkadot = (chain: string) => `https://api.coingecko.com/api/v3/coins/$
 const urlBlock = (chain: string) => `https://${chain}.api.subscan.io/api/scan/block`;
 const urlAccountDaily = (chain: string) => `https://${chain}.api.subscan.io/api/scan/daily`;
 
-const { SUBSCAN_API_KEY } = process.env;
+const SUBSCAN_API_KEY = process.env.SUBSCAN_API_KEY || '';
+const LIMIT_UPDATE_DATA_CHAIN = process.env.LIMIT_UPDATE_DATA_CHAIN || 10;
 
 function httpGetRequest(url: string, body: string) {
   return new Promise((resolve, reject) => {
@@ -250,10 +253,29 @@ async function retryPromise(promise: any, nthTry: number) {
     if (nthTry === 1) {
       return Promise.reject(e);
     }
+    // eslint-disable-next-line no-console
     console.log('retrying', nthTry, 'time');
     return retryPromise(promise, nthTry - 1);
   }
 }
+
+const getNameCacheWithChain = (chain: string) => `KEY_CACHE_WITH_${chain}`;
+
+const getDataInCache = (chain:string) => {
+  const keyName = getNameCacheWithChain(chain);
+  if (chainCache.get(keyName)) return JSON.parse(chainCache.get(keyName));
+  return null;
+};
+
+const updateDataToCache = async (data: any, chain: string) => {
+  const timeOutCache = Number(LIMIT_UPDATE_DATA_CHAIN) * 60 * 1000;
+  const keyName = getNameCacheWithChain(chain);
+  const dataSave = JSON.stringify(data);
+  const cacheData = getDataInCache(chain);
+  if (!cacheData) {
+    chainCache.put(keyName, dataSave, timeOutCache);
+  }
+};
 
 const getData: RequestHandler = async (req, res) => {
   const {
@@ -280,10 +302,17 @@ const getData: RequestHandler = async (req, res) => {
       market_cap: marketCap,
       market_cap_rank: marketCapRank
     };
+    updateDataToCache(dataSend, chain);
     res.send(dataSend);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.log('Error promise all data');
-    console.log(error);
+    // eslint-disable-next-line no-console
+    console.error(error);
+    const dataSendToClient = getDataInCache(chain);
+    // eslint-disable-next-line no-console
+    console.log(dataSendToClient);
+    res.send(dataSendToClient);
   }
 };
 
