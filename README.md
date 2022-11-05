@@ -43,3 +43,21 @@ sequenceDiagram
     DotInsightsBE->>-DotInsightsFE: Reponse Vote Result
     DotInsightsFE->>-User: Show Vote Result
 ```
+
+## New Project Concept
+Here is the main concept of voting for DotInsights.
+```mermaid
+flowchart LR
+    subgraph Google Form
+    a1(Apply Google Form)-->a2{Approve}
+    end
+    a2 --true--> b1
+    a2 --false--> a3(Stop)
+    subgraph Notion
+    b1(Create New Record)
+    end
+    b1 -.-> c1
+    subgraph DotInsightBE
+    c1(Interval synchronize)
+    end
+```
