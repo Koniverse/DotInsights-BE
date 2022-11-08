@@ -12,7 +12,7 @@ const cacheService = require('express-api-cache');
 const { cache } = cacheService;
 
 // Auth routes
-router.get('/getProjects', ProjectController.all);
+router.get('/getProjects', cache('9 minutes'), ProjectController.all);
 // router.post('/upsertProjects', ProjectController.upsert);
 router.post('/getMessage', ProjectController.message);
 router.post('/toggleVoteProject', ProjectController.toggleVote);
