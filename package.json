@@ -30,10 +30,8 @@
   "dependencies": {
     "@hapi/joi": "^17.1.1",
     "@metamask/eth-sig-util": "^5.0.0",
-    "@polkadot/api": "^9.7.1",
     "@polkadot/util": "^10.1.11",
     "@polkadot/util-crypto": "^10.1.11",
-    "autocannon": "^7.10.0",
     "bcrypt": "^5.1.0",
     "body-parser": "^1.20.1",
     "compression": "^1.7.4",
@@ -50,6 +48,7 @@
     "winston": "^3.8.2"
   },
   "devDependencies": {
+    "@polkadot/api": "^9.7.1",
     "@types/bcrypt": "^5.0.0",
     "@types/compression": "^1.7.2",
     "@types/dotenv": "^8.2.0",
@@ -62,6 +61,7 @@
     "@types/swagger-ui-express": "^4.1.2",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/parser": "^5.41.0",
+    "autocannon": "^7.10.0",
     "eslint": "^8.26.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.26.0",
