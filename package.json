@@ -25,7 +25,8 @@
     "dev": "nodemon src/server.ts",
     "start": "node dist/src/server.js",
     "test": "jest",
-    "fix-lint": "./node_modules/eslint/bin/eslint.js  src --ext .ts --fix"
+    "fix-lint": "./node_modules/eslint/bin/eslint.js  src --ext .ts --fix",
+    "autocannon": "node src/tests/autocannon.js"
   },
   "dependencies": {
     "@hapi/joi": "^17.1.1",
