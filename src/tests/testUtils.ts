@@ -1,7 +1,7 @@
 import chai from 'chai';
-import { address, project, HOST_NAME } from './testData';
+import { ADDRESS, PROJECT, HOST_NAME } from './testData';
 
-const dataDemo = { address, project };
+const dataDemo = { address: ADDRESS, project: PROJECT };
 export const addDataTest = async () => {
   await chai.request(HOST_NAME)
     .post('/api/createDemo').send(dataDemo);

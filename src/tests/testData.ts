@@ -1,5 +1,5 @@
 export const HOST_NAME = 'http://localhost:3000';
-export const project = {
+export const PROJECT = {
   project_id: 'imbue_network',
   project: 'imbue network 222',
   'layer_0.1': 'https://www.notion.so/Kusama-ca67f6dc30234a5a94b547b61662f1c5',
@@ -25,4 +25,4 @@ export const project = {
   subcategory: '',
   substrate_builders_programs: true
 };
-export const address = '5Do4bL1swnwXKHMeCuFkvRFbDkpFHXtyKYn7AkcMrQYB68t7';
+export const ADDRESS = '5Do4bL1swnwXKHMeCuFkvRFbDkpFHXtyKYn7AkcMrQYB68t7';

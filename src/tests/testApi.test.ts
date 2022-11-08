@@ -4,12 +4,12 @@ import chaiHttp from 'chai-http';
 import { Keyring } from '@polkadot/api';
 import { stringToU8a, u8aToHex } from '@polkadot/util';
 import { RANDOM_SALT } from '../controllers/project';
-import { address, project, HOST_NAME } from './testData';
+import { ADDRESS, PROJECT, HOST_NAME } from './testData';
 import { addDataTest, removeDataTest } from './testUtils';
 
 chai.should();
 chai.use(chaiHttp);
-const { project_id } = project;
+const { project_id } = PROJECT;
 
 describe('Testing all api in Project', () => {
   beforeAll(async () => {
@@ -32,7 +32,7 @@ describe('Testing all api in Project', () => {
   });
 
   it('Test api /api/getMessage', done => {
-    const bodeSend = { address };
+    const bodeSend = { address: ADDRESS };
     // Make POST Request
     chai.request(HOST_NAME)
       .post('/api/getMessage').send(bodeSend)
@@ -71,7 +71,7 @@ describe('Testing all api in Project', () => {
   });
   it('check Wrong signature! in api /api/toggleVoteProject', done => {
     const bodyData = {
-      address,
+      address: ADDRESS,
       project_id,
       signature: ''
     };
@@ -83,7 +83,7 @@ describe('Testing all api in Project', () => {
       });
   });
   it('Test case success in api api/toggleVoteProject', done => {
-    const bodySend = { address };
+    const bodySend = { address: ADDRESS };
     // Make POST Request
     chai.request(HOST_NAME)
       .post('/api/getMessage').send(bodySend)
@@ -94,7 +94,7 @@ describe('Testing all api in Project', () => {
         const alice = keyringNew.addFromUri(`//${name}`, { name });
         const messageConvert = stringToU8a(message);
         const signature = u8aToHex(alice.sign(messageConvert));
-        const bodyData = { address, project_id, signature };
+        const bodyData = { address: ADDRESS, project_id, signature };
         chai.request(HOST_NAME)
           .post('/api/toggleVoteProject').send(bodyData)
           .end((err, res) => {
@@ -104,7 +104,7 @@ describe('Testing all api in Project', () => {
       });
   });
   it('Test case fail in api api/toggleVoteProject', done => {
-    const bodySend = { address };
+    const bodySend = { address: ADDRESS };
     // Make POST Request
     chai.request(HOST_NAME)
       .post('/api/getMessage').send(bodySend)
@@ -115,7 +115,7 @@ describe('Testing all api in Project', () => {
         const alice = keyringNew.addFromUri(`//${name}`, { name });
         const messageConvert = stringToU8a(message);
         const signature = u8aToHex(alice.sign(messageConvert));
-        const bodyData = { address, project_id, signature };
+        const bodyData = { address: ADDRESS, project_id, signature };
         chai.request(HOST_NAME)
           .post('/api/toggleVoteProject').send(bodyData)
           .end((err, res) => {
@@ -125,7 +125,7 @@ describe('Testing all api in Project', () => {
       });
   });
   it('Test api api/getVotedProject', done => {
-    const bodySend = { address };
+    const bodySend = { address: ADDRESS };
     // Make POST Request
     chai.request(HOST_NAME)
       .post('/api/getVotedProject').send(bodySend)
