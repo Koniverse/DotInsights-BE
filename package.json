@@ -30,10 +30,13 @@
   "dependencies": {
     "@hapi/joi": "^17.1.1",
     "@metamask/eth-sig-util": "^5.0.0",
+    "@polkadot/api": "^9.7.1",
     "@polkadot/util": "^10.1.11",
     "@polkadot/util-crypto": "^10.1.11",
     "bcrypt": "^5.1.0",
     "body-parser": "^1.20.1",
+    "chai": "^4.3.7",
+    "chai-http": "^4.3.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
