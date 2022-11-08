@@ -4,7 +4,6 @@ import { Router } from 'express';
 
 import * as ProjectController from './controllers/project';
 import * as ChainDataController from './controllers/chain_data';
-import * as DemoDataController from './controllers/demo_data';
 
 export const router = Router();
 
@@ -20,8 +19,6 @@ router.post('/toggleVoteProject', ProjectController.toggleVote);
 router.post('/getVotedProject', ProjectController.allVote);
 router.get('/chainData/:chain', cache('1 minutes'), ChainDataController.data);
 router.get('/getVoteCount', ProjectController.voteCount);
-router.post('/createDemo', DemoDataController.create);
-router.post('/removeDemo', DemoDataController.remove);
 
 // if (process.env.NODE_ENV === 'development') {
 //   router.use('/dev/api-docs', swaggerUi.serve);
