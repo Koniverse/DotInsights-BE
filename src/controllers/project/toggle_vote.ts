@@ -1,15 +1,15 @@
 import { RequestHandler } from 'express';
 import { recoverPersonalSignature } from '@metamask/eth-sig-util';
 import { decodeAddress, isEthereumAddress, signatureVerify } from '@polkadot/util-crypto';
-import { u8aToHex } from '@polkadot/util';
+import { BN, u8aToHex } from '@polkadot/util';
 import { relogRequestHandler } from '../../middleware/request-middleware';
 import { RANDOM_SALT } from './index';
 import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
-import { provider } from '../../app';
+import { substrateProvider } from '../../app';
 
-const MINIMUM_DOT_TO_GENERATE_VOUCHER = process.env.MINIMUM_DOT_TO_GENERATE_VOUCHER || 0;
+const MINIMUM_DOT_BALANCE = process.env.MINIMUM_DOT_BALANCE || 0;
 
 const isValidSignature = (address: string, signedMessage: string, signature: string): boolean => {
   if (isEthereumAddress(address)) {
@@ -59,8 +59,8 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
 
     // Toggle vote
     if (!vote) {
-      const api = provider.getApiConnected();
-      if (MINIMUM_DOT_TO_GENERATE_VOUCHER > 0) {
+      const api = substrateProvider.getApiConnected();
+      if (MINIMUM_DOT_BALANCE > 0) {
         if (!api) {
           return res.status(500).json({ message: 'Unable to check validate balance when all api can not check them!' });
         }
@@ -68,9 +68,9 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
         // @ts-ignore
         const { data } = balance.toHuman();
         const { reserved, miscFrozen } = data;
-        const numberDot = Number(reserved.replaceAll(',', '')) + Number(miscFrozen.replaceAll(',', ''));
-        if (numberDot < MINIMUM_DOT_TO_GENERATE_VOUCHER) {
-          return res.status(500).json({ message: `Required at least ${MINIMUM_DOT_TO_GENERATE_VOUCHER} DOT in balance for submit vote` });
+        const numberDot = new BN(reserved.replaceAll(',', '')).add(new BN(miscFrozen.replaceAll(',', '')));
+        if (numberDot.lt(new BN(MINIMUM_DOT_BALANCE))) {
+          return res.status(500).json({ message: `Required at least ${MINIMUM_DOT_BALANCE} DOT in balance for submit vote` });
         }
       };
       const newVote = await Vote.create({

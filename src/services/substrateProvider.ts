@@ -1,9 +1,9 @@
 // eslint-disable-next-line max-classes-per-file
 import { ApiPromise, WsProvider } from '@polkadot/api';
 
-const LIST_END_POINTS = process.env.LIST_END_POINTS || null;
+const POLKADOT_ENDPOINTS = process.env.POLKADOT_ENDPOINTS || null;
 
-class Api {
+class ApiSubstrate {
   endPoint: string;
 
   api: ApiPromise;
@@ -30,13 +30,13 @@ class Api {
   }
 }
 
-export class Provider {
-  listAPi: Api[] = [];
+export class SubstrateProvider {
+  listAPi: ApiSubstrate[] = [];
 
   constructor() {
-    if (LIST_END_POINTS) {
-      LIST_END_POINTS.split(',').forEach(endPoint => {
-        const api = new Api(endPoint);
+    if (POLKADOT_ENDPOINTS) {
+      POLKADOT_ENDPOINTS.split(',').forEach(endPoint => {
+        const api = new ApiSubstrate(endPoint);
         this.listAPi.push(api);
       });
     }
