@@ -36,7 +36,11 @@ describe('Testing all api in Project', () => {
     // Make POST Request
     chai.request(HOST_NAME)
       .post('/api/getMessage').send(bodeSend)
-      .end((err, res) => {
+      .end((err: any, res:any) => {
+        if (err) {
+          // eslint-disable-next-line no-console
+          console.log(err);
+        }
         expect(res.body.message).include(RANDOM_SALT);
         done();
       });
@@ -50,7 +54,11 @@ describe('Testing all api in Project', () => {
     };
     chai.request(HOST_NAME)
       .post('/api/toggleVoteProject').send(bodySendProjectNotExist)
-      .end((err, res) => {
+      .end((err: any, res:any) => {
+        if (err) {
+          // eslint-disable-next-line no-console
+          console.log(err);
+        }
         expect(res.error.text).include('Project Not Found');
         done();
       });
@@ -64,7 +72,11 @@ describe('Testing all api in Project', () => {
     };
     chai.request(HOST_NAME)
       .post('/api/toggleVoteProject').send(bodySendUserNotExist)
-      .end((err, res) => {
+      .end((err: any, res:any) => {
+        if (err) {
+          // eslint-disable-next-line no-console
+          console.log(err);
+        }
         expect(res.error.text).include('User Not Found');
         done();
       });
@@ -77,7 +89,11 @@ describe('Testing all api in Project', () => {
     };
     chai.request(HOST_NAME)
       .post('/api/toggleVoteProject').send(bodyData)
-      .end((err, res) => {
+      .end((err: any, res:any) => {
+        if (err) {
+          // eslint-disable-next-line no-console
+          console.log(err);
+        }
         expect(res.error.text).include('Wrong signature!');
         done();
       });
@@ -87,7 +103,11 @@ describe('Testing all api in Project', () => {
     // Make POST Request
     chai.request(HOST_NAME)
       .post('/api/getMessage').send(bodySend)
-      .end((err, res) => {
+      .end((err: any, res:any) => {
+        if (err) {
+          // eslint-disable-next-line no-console
+          console.log(err);
+        }
         const { message } = res.body;
         const name = 'Dotinsights';
         const keyringNew = new Keyring({ type: 'sr25519' });
@@ -97,8 +117,12 @@ describe('Testing all api in Project', () => {
         const bodyData = { address: ADDRESS, project_id, signature };
         chai.request(HOST_NAME)
           .post('/api/toggleVoteProject').send(bodyData)
-          .end((err, res) => {
-            expect(res.body).to.have.property('isVote', true);
+          .end((errData: any, resData:any) => {
+            if (errData) {
+              // eslint-disable-next-line no-console
+              console.log(errData);
+            }
+            expect(resData.body).to.have.property('isVote', true);
             done();
           });
       });
@@ -108,7 +132,11 @@ describe('Testing all api in Project', () => {
     // Make POST Request
     chai.request(HOST_NAME)
       .post('/api/getMessage').send(bodySend)
-      .end((err, res) => {
+      .end((err: any, res:any) => {
+        if (err) {
+          // eslint-disable-next-line no-console
+          console.log(err);
+        }
         const { message } = res.body;
         const name = 'Dotinsights';
         const keyringNew = new Keyring({ type: 'sr25519' });
@@ -118,8 +146,12 @@ describe('Testing all api in Project', () => {
         const bodyData = { address: ADDRESS, project_id, signature };
         chai.request(HOST_NAME)
           .post('/api/toggleVoteProject').send(bodyData)
-          .end((err, res) => {
-            expect(res.body).to.have.property('isVote', false);
+          .end((errData: any, resData:any) => {
+            if (errData) {
+              // eslint-disable-next-line no-console
+              console.log(errData);
+            }
+            expect(resData.body).to.have.property('isVote', false);
             done();
           });
       });
@@ -129,7 +161,11 @@ describe('Testing all api in Project', () => {
     // Make POST Request
     chai.request(HOST_NAME)
       .post('/api/getVotedProject').send(bodySend)
-      .end((err, res) => {
+      .end((err: any, res:any) => {
+        if (err) {
+          // eslint-disable-next-line no-console
+          console.log(err);
+        }
         expect(res.body).to.be.an('array');
         done();
       });
@@ -137,7 +173,11 @@ describe('Testing all api in Project', () => {
   it('Test api /api/chainData/polkadot', done => {
     chai.request(HOST_NAME)
       .get('/api/chainData/polkadot')
-      .end((err, res) => {
+      .end((err: any, res:any) => {
+        if (err) {
+          // eslint-disable-next-line no-console
+          console.log(err);
+        }
         expect(res.body).to.have.property('accounts');
         expect(res.body).to.have.property('accounts_change_24h');
         expect(res.body).to.have.property('transfers');
