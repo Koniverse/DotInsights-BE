@@ -54,12 +54,18 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
     // Toggle vote
     if (!vote) {
       const api = provider.getApiConnected();
-      console.log(api);
-      if (api && MINIMUM_DOT_TO_GENERATE_VOUCHER > 0) {
+      if (MINIMUM_DOT_TO_GENERATE_VOUCHER > 0) {
+        if (!api) {
+          return res.status(500).json({ message: 'Unable to check validate balance when all api can not check them!' });
+        }
+        const balance = await api.query.system.account(address);
         // @ts-ignore
-        const balance = await api.query.system.account('12vGYXHLrNhXnvnDU2VL9HxkxVtEr3V3AAYrLfBh5jP5UgFs');
-        // provider.api.query.s
-        console.log(balance.toHuman());
+        const { data } = balance.toHuman();
+        const { reserved, miscFrozen } = data;
+        const numberDot = Number(reserved.replaceAll(',', '')) + Number(miscFrozen.replaceAll(',', ''));
+        if (numberDot < MINIMUM_DOT_TO_GENERATE_VOUCHER) {
+          return res.status(500).json({ message: `Required at least ${MINIMUM_DOT_TO_GENERATE_VOUCHER} DOT in balance for submit vote` });
+        }
       };
       const newVote = await Vote.create({
         project_id, address, signMessage, signature

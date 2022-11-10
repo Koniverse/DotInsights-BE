@@ -14,14 +14,15 @@ class Api {
     this.endPoint = endPoint;
     const apiPromise = new ApiPromise({ provider: new WsProvider(endPoint) });
     apiPromise.isReady.then(data => {
-      console.log('co vao day ko ');
       this.isConnected = true;
       this.api = data;
       this.api.on('connected', (): void => {
         this.isConnected = true;
+        // eslint-disable-next-line no-console
         console.log('API has been connected to the endpoint');
       });
       this.api.on('disconnected', (): void => {
+        // eslint-disable-next-line no-console
         console.log('API has been disconnected to the endpoint');
         this.isConnected = false;
       });
