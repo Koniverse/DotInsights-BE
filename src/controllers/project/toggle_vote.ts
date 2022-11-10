@@ -9,7 +9,7 @@ import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
 import { substrateProvider } from '../../app';
 
-const MINIMUM_DOT_BALANCE = process.env.MINIMUM_DOT_BALANCE || 0;
+const MINIMUM_DOT_BALANCE = Number(process.env.MINIMUM_DOT_BALANCE || 0);
 
 const isValidSignature = (address: string, signedMessage: string, signature: string): boolean => {
   if (isEthereumAddress(address)) {
@@ -68,7 +68,7 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
         const { data } = balance.toHuman();
         const { free, reserved } = data;
         const numberDot = new BN(reserved.replaceAll(',', '')).add(new BN(free.replaceAll(',', '')));
-        if (numberDot.lt(new BN(MINIMUM_DOT_BALANCE))) {
+        if (numberDot.lt(new BN(MINIMUM_DOT_BALANCE * 10 ** 10))) {
           return res.status(500).json({ message: `Required at least ${MINIMUM_DOT_BALANCE} DOT in balance for submit vote` });
         }
       };
