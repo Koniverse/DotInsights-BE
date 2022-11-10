@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import chai from 'chai';
 import { ADDRESS, PROJECT, HOST_NAME } from './testData';
 
