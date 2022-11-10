@@ -9,6 +9,8 @@ import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
 import { provider } from '../../app';
 
+const MINIMUM_DOT_TO_GENERATE_VOUCHER = process.env.MINIMUM_DOT_TO_GENERATE_VOUCHER || 0;
+
 const isValidSignature = (address: string, signedMessage: string, signature: string): boolean => {
   if (isEthereumAddress(address)) {
     const recoveredAddress = recoverPersonalSignature({
@@ -51,6 +53,14 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
 
     // Toggle vote
     if (!vote) {
+      const api = provider.getApiConnected();
+      console.log(api);
+      if (api && MINIMUM_DOT_TO_GENERATE_VOUCHER > 0) {
+        // @ts-ignore
+        const balance = await api.query.system.account('12vGYXHLrNhXnvnDU2VL9HxkxVtEr3V3AAYrLfBh5jP5UgFs');
+        // provider.api.query.s
+        console.log(balance.toHuman());
+      };
       const newVote = await Vote.create({
         project_id, address, signMessage, signature
       });
