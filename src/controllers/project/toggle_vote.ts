@@ -19,10 +19,16 @@ const isValidSignature = (address: string, signedMessage: string, signature: str
     });
     return recoveredAddress.toLocaleLowerCase() === address.toLocaleLowerCase();
   }
-  const publicKey = decodeAddress(address);
-  const hexPublicKey = u8aToHex(publicKey);
+  try {
+    const publicKey = decodeAddress(address);
+    const hexPublicKey = u8aToHex(publicKey);
 
-  return signatureVerify(signedMessage, signature, hexPublicKey).isValid;
+    return signatureVerify(signedMessage, signature, hexPublicKey).isValid;
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error(e);
+    return false;
+  }
 };
 
 const toggleVoteProjects: RequestHandler = async (req, res) => {
