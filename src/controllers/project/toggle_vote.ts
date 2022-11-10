@@ -67,8 +67,8 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
         const balance = await api.query.system.account(address);
         // @ts-ignore
         const { data } = balance.toHuman();
-        const { reserved, miscFrozen } = data;
-        const numberDot = new BN(reserved.replaceAll(',', '')).add(new BN(miscFrozen.replaceAll(',', '')));
+        const { free, reserved } = data;
+        const numberDot = new BN(reserved.replaceAll(',', '')).add(new BN(free.replaceAll(',', '')));
         if (numberDot.lt(new BN(MINIMUM_DOT_BALANCE))) {
           return res.status(500).json({ message: `Required at least ${MINIMUM_DOT_BALANCE} DOT in balance for submit vote` });
         }
