@@ -3,6 +3,7 @@ import compression from 'compression';
 import path from 'path';
 import express from 'express';
 import { router } from './routes';
+import { Provider } from './services/provider';
 
 export const app = express();
 
@@ -19,3 +20,4 @@ app.set('port', process.env.PORT || 3000);
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }));
 
 app.use('/api', router);
+export const provider = new Provider();

@@ -7,6 +7,7 @@ import { RANDOM_SALT } from './index';
 import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
+import { provider } from '../../app';
 
 const isValidSignature = (address: string, signedMessage: string, signature: string): boolean => {
   if (isEthereumAddress(address)) {
