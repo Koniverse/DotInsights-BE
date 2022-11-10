@@ -49,10 +49,9 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
 
   try {
     // Validate signature
-    // TODO: Remove this check old sign data after FE update new signature api
-    const oldSignMessage = `${RANDOM_SALT} ${user.salt}`;
+    // const oldSignMessage = `${RANDOM_SALT} ${user.salt}`;
     const signMessage = `${RANDOM_SALT} ${user.salt}-${project_id}`;
-    if (!isValidSignature(address, oldSignMessage, signature) && !isValidSignature(address, signMessage, signature)) {
+    if (!isValidSignature(address, signMessage, signature)) {
       return res.status(500).json({ message: 'Wrong signature!' });
     }
     // End validate signature
