@@ -14,6 +14,7 @@ const urlTransfersV1 = (chain: string) => `https://${chain}.api.subscan.io/api/s
 const urlPolkadot = (chain: string) => `https://api.coingecko.com/api/v3/coins/${chain}`;
 const urlBlock = (chain: string) => `https://${chain}.api.subscan.io/api/scan/block`;
 const urlAccountDaily = (chain: string) => `https://${chain}.api.subscan.io/api/scan/daily`;
+const urlScanData = (chain: string) => `https://${chain}.api.subscan.io/api/scan/metadata`;
 
 const SUBSCAN_API_KEY = process.env.SUBSCAN_API_KEY || '';
 const LIMIT_UPDATE_DATA_CHAIN = process.env.LIMIT_UPDATE_DATA_CHAIN || 10;
@@ -171,6 +172,28 @@ const getDataTransfers = async (chain: string) => {
   });
 };
 
+const getDataMeta: (chain: string) => Promise<{
+  countSignedExtrinsic: number,
+  finalizedBlockNum: number,
+}> = async (chain: string) => {
+  const postData = JSON.stringify({
+    row: 1,
+    page: 1
+  });
+
+  return new Promise((resolve, reject) => {
+    querySubscanData(urlScanData(chain), postData).then((response: any) => {
+      const { data } = response.body;
+      // eslint-disable-next-line camelcase
+      const { finalized_blockNum, count_signed_extrinsic } = data;
+      // eslint-disable-next-line camelcase
+      resolve({ finalizedBlockNum: finalized_blockNum, countSignedExtrinsic: count_signed_extrinsic });
+    }).catch((e: Error) => {
+      reject(e);
+    });
+  });
+};
+
 const getDataPolkadot: (chain: string) => Promise<{
   currentPrice: number,
   volume24h: number,
@@ -284,23 +307,23 @@ const getData: RequestHandler = async (req, res) => {
   //
   const requestAccounts = retryPromise(getDataAccounts(chain), 3);
   const requestTransfers = retryPromise(getDataTransfers(chain), 3);
-  const requestPolkadot = retryPromise(getDataPolkadot(chain), 3);
+  const requestMetaSubscan = retryPromise(getDataMeta(chain), 3);
   const requestAccountDaily = retryPromise(getDataAccountDaily(chain), 3);
   const requestTransferChange = retryPromise(getTransferChange(chain), 3);
   try {
-    const [accounts, transfers, polkadot, accountDaily, transferChange] = await Promise.all([requestAccounts, requestTransfers, requestPolkadot, requestAccountDaily, requestTransferChange]);
-    const {
-      currentPrice, volume24h, marketCap, marketCapRank
-    } = polkadot;
+    const [accounts, transfers, metaSubScan, accountDaily, transferChange] = await Promise.all([requestAccounts, requestTransfers, requestMetaSubscan, requestAccountDaily, requestTransferChange]);
+    const { finalizedBlockNum, countSignedExtrinsic } = metaSubScan;
     const dataSend = {
       accounts,
       accounts_change_24h: accountDaily,
       transfers,
       transfers_change_24h: transferChange,
-      current_price: currentPrice,
-      volume24h,
-      market_cap: marketCap,
-      market_cap_rank: marketCapRank
+      current_price: 0,
+      volume24h: 0,
+      market_cap: 0,
+      market_cap_rank: 0,
+      finalizedBlockNum,
+      countSignedExtrinsic
     };
     updateDataToCache(dataSend, chain);
     res.send(dataSend);
