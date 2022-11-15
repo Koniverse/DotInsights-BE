@@ -39,12 +39,12 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
   const vote = await Vote.findOne({ project_id, address });
 
   if (!project) {
-    return res.status(404).send('Project Not Found');
+    return res.status(404).json({ message: 'Project Not Found' });
   }
   const user = await User.findOne({ address });
 
   if (!user) {
-    return res.status(404).send('User Not Found');
+    return res.status(404).json({ message: 'User Not Found' });
   }
 
   try {
