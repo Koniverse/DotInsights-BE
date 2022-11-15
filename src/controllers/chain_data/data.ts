@@ -8,11 +8,10 @@ import { relogRequestHandler } from '../../middleware/request-middleware';
 const chainCache = require('memory-cache');
 const https = require('https');
 
-const urlAccounts = (chain: string) => `https://${chain}.api.subscan.io/api/v2/scan/accounts`;
-const urlTransfers = (chain: string) => `https://${chain}.api.subscan.io/api/v2/scan/transfers`;
 const urlTransfersV1 = (chain: string) => `https://${chain}.api.subscan.io/api/scan/transfers`;
 const urlPolkadot = (chain: string) => `https://api.coingecko.com/api/v3/coins/${chain}`;
 const urlBlock = (chain: string) => `https://${chain}.api.subscan.io/api/scan/block`;
+const urlExtrinsics = (chain: string) => `https://${chain}.api.subscan.io/api/scan/extrinsics`;
 const urlAccountDaily = (chain: string) => `https://${chain}.api.subscan.io/api/scan/daily`;
 const urlScanData = (chain: string) => `https://${chain}.api.subscan.io/api/scan/metadata`;
 
@@ -112,55 +111,35 @@ const getTransferChange = async (chain: string) => {
   const getDataBlock = await querySubscanData(urlBlock(chain), dataSend);
   // @ts-ignore
   const bodyData = getDataBlock.body;
-  let blockNum = 0;
+  let blockNumYesterday = 0;
   if (bodyData.data) {
-    blockNum = bodyData.data.block_num;
+    blockNumYesterday = bodyData.data.block_num;
   }
   return new Promise((resolve, reject) => {
     const transferDataSend = JSON.stringify({
       row: 1,
       page: 1,
-      from_block: blockNum
+      from_block: blockNumYesterday
     });
     querySubscanData(urlTransfersV1(chain), transferDataSend).then((response: any) => {
-      let count = 0;
-      if (response.body.data) {
-        count = response.body.data.count;
-      }
-      resolve(count);
+      const countBlockChange = response.body?.data?.count || 0;
+      resolve({ countBlockChange, blockNumYesterday });
     }).catch((e: Error) => {
       reject(e);
     });
   });
 };
 
-const getDataAccounts = async (chain: string) => {
+const getExtrinsicsChange = async (chain: string, blockRange: string) => {
   const postData = JSON.stringify({
     row: 1,
-    page: 1
+    page: 1,
+    signed: 'yes',
+    block_range: blockRange
   });
 
   return new Promise((resolve, reject) => {
-    querySubscanData(urlAccounts(chain), postData).then((response: any) => {
-      let count = 0;
-      if (response.body?.data) {
-        count = response.body.data.count;
-      }
-      resolve(count);
-    }).catch((e: Error) => {
-      reject(e);
-    });
-  });
-};
-
-const getDataTransfers = async (chain: string) => {
-  const postData = JSON.stringify({
-    row: 1,
-    page: 1
-  });
-
-  return new Promise((resolve, reject) => {
-    querySubscanData(urlTransfers(chain), postData).then((response: any) => {
+    querySubscanData(urlExtrinsics(chain), postData).then((response: any) => {
       let count = 0;
       if (response.body?.data) {
         count = response.body.data.count;
@@ -175,6 +154,9 @@ const getDataTransfers = async (chain: string) => {
 const getDataMeta: (chain: string) => Promise<{
   countSignedExtrinsic: number,
   finalizedBlockNum: number,
+  accounts: number,
+  blockNum: number,
+  transfers: number
 }> = async (chain: string) => {
   const postData = JSON.stringify({
     row: 1,
@@ -184,10 +166,15 @@ const getDataMeta: (chain: string) => Promise<{
   return new Promise((resolve, reject) => {
     querySubscanData(urlScanData(chain), postData).then((response: any) => {
       const { data } = response.body;
-      // eslint-disable-next-line camelcase
-      const { finalized_blockNum, count_signed_extrinsic } = data;
-      // eslint-disable-next-line camelcase
-      resolve({ finalizedBlockNum: finalized_blockNum, countSignedExtrinsic: count_signed_extrinsic });
+      resolve(
+        {
+          finalizedBlockNum: data?.finalized_blockNum || 0,
+          countSignedExtrinsic: data?.count_signed_extrinsic || 0,
+          accounts: data?.count_account || 0,
+          transfers: data?.count_transfer || 0,
+          blockNum: data?.blockNum || 0
+        }
+      );
     }).catch((e: Error) => {
       reject(e);
     });
@@ -304,26 +291,25 @@ const getData: RequestHandler = async (req, res) => {
   const {
     chain
   } = req.params;
-  //
-  const requestAccounts = retryPromise(getDataAccounts(chain), 3);
-  const requestTransfers = retryPromise(getDataTransfers(chain), 3);
   const requestMetaSubscan = retryPromise(getDataMeta(chain), 3);
   const requestAccountDaily = retryPromise(getDataAccountDaily(chain), 3);
   const requestTransferChange = retryPromise(getTransferChange(chain), 3);
   try {
-    const [accounts, transfers, metaSubScan, accountDaily, transferChange] = await Promise.all([requestAccounts, requestTransfers, requestMetaSubscan, requestAccountDaily, requestTransferChange]);
-    const { finalizedBlockNum, countSignedExtrinsic } = metaSubScan;
+    const [metaSubScan, accountDaily, transferChange] = await Promise.all([requestMetaSubscan, requestAccountDaily, requestTransferChange]);
+    const {
+      finalizedBlockNum, countSignedExtrinsic, accounts, transfers, blockNum
+    } = metaSubScan;
+    const { countBlockChange, blockNumYesterday } = transferChange;
+    const extrinsicsChange = await retryPromise(getExtrinsicsChange(chain, `${blockNumYesterday}-${blockNum}`), 3);
     const dataSend = {
       accounts,
       accounts_change_24h: accountDaily,
+      block_change_24h: blockNum - blockNumYesterday,
       transfers,
-      transfers_change_24h: transferChange,
-      current_price: 0,
-      volume24h: 0,
-      market_cap: 0,
-      market_cap_rank: 0,
+      transfers_change_24h: countBlockChange,
       finalizedBlockNum,
-      countSignedExtrinsic
+      countSignedExtrinsic,
+      extrinsicsChange
     };
     updateDataToCache(dataSend, chain);
     res.send(dataSend);
