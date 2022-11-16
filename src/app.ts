@@ -20,4 +20,4 @@ app.set('port', process.env.PORT || 3000);
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }));
 
 app.use('/api', router);
-export const substrateProvider = new SubstrateProvider();
+// export const substrateProvider = new SubstrateProvider();
