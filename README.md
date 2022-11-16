@@ -34,6 +34,11 @@ sequenceDiagram
         DotInsightsFE->>+DotInsightsBE: Request Vote Message For Selected Address
         DotInsightsBE->>-DotInsightsFE: Response Vote Message
         DotInsightsFE->>DotInsightsFE: Save Vote Message With Selected Address
+        DotInsightsFE->>+DotInsightsBE: Request Vote Ability
+        DotInsightsBE->>DotInsightsBE: Check the balances with Sub.id APIs
+        DotInsightsBE->>DotInsightsBE: Cache result if it return true
+        DotInsightsBE->>-DotInsightsFE: Response Vote Ability
+        DotInsightsFE->>DotInsightsFE: Save Vote Ability
     end
     User->>+DotInsightsFE: Vote
     DotInsightsFE->>+Wallet: Request Signature For "[Vote Message]-[Project ID]"
