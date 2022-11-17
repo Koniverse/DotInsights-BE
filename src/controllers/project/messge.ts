@@ -1,6 +1,5 @@
 import { RequestHandler } from 'express';
-import { decodeAddress, signatureVerify } from '@polkadot/util-crypto';
-import { u8aToHex } from '@polkadot/util';
+import { isEthereumAddress } from '@polkadot/util-crypto';
 import { relogRequestHandler } from '../../middleware/request-middleware';
 import { User } from '../../models/User';
 import { RANDOM_SALT } from './index';
@@ -18,16 +17,20 @@ export const getRandomInt = (minNum: number, maxNum: number) => {
 const getBalancesNetworks = async (address: string) => {
   const pros: any[] = [];
   const balances = {};
+  const NETWORK_ETHEREUM = ['moonbeam', 'moonriver', 'astar', 'shiden'];
+  const isEthereum = isEthereumAddress(address);
   if (CHECK_MULTICHAIN_BALANCE_NETWORK) {
     const networks = CHECK_MULTICHAIN_BALANCE_NETWORK.split(',');
     networks.forEach(network => {
-      // console.log(network);/
-      pros.push(httpGetRequest(urlBalances(address, network), network));
+      if (NETWORK_ETHEREUM.includes(network) && isEthereum) {
+        pros.push(httpGetRequest(urlBalances(address, network), network));
+      } else if (!isEthereum && !['moonbeam', 'moonriver'].includes(network)) {
+        pros.push(httpGetRequest(urlBalances(address, network), network));
+      }
     });
 
     try {
       const data = await Promise.all(pros);
-      // console.log(data);/
       data.forEach(key => {
         // eslint-disable-next-line no-restricted-syntax
         for (const [k, value] of Object.entries(key)) {
@@ -35,8 +38,6 @@ const getBalancesNetworks = async (address: string) => {
           // @ts-ignore
           balances[k] = freeBalance;
         }
-        // console.log('===================');
-        // console.log(balances);
       });
       return balances;
     } catch (e) {
