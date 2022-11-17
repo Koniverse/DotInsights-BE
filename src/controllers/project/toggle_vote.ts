@@ -7,7 +7,6 @@ import { RANDOM_SALT } from './index';
 import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
-import { substrateProvider } from '../../app';
 
 const MINIMUM_DOT_BALANCE = Number(process.env.MINIMUM_DOT_BALANCE || 0);
 
@@ -58,20 +57,9 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
 
     // Toggle vote
     if (!vote) {
-      const api = substrateProvider.getApiConnected();
-      if (MINIMUM_DOT_BALANCE > 0) {
-        if (!api) {
-          return res.status(500).json({ message: 'Unable to check validate balance when all api can not check them!' });
-        }
-        const balance = await api.query.system.account(address);
-        // @ts-ignore
-        const { data } = balance.toHuman();
-        const { free, reserved } = data;
-        const numberDot = new BN(reserved.replaceAll(',', '')).add(new BN(free.replaceAll(',', '')));
-        if (numberDot.lt(new BN(MINIMUM_DOT_BALANCE * 10 ** 10))) {
-          return res.status(500).json({ message: `Required at least ${MINIMUM_DOT_BALANCE} DOT in balance for submit vote` });
-        }
-      };
+      if (!user.voteAbility) {
+        return res.status(500).json({ message: `Required at least ${MINIMUM_DOT_BALANCE} DOT in balance for submit vote` });
+      }
       const newVote = await Vote.create({
         project_id, address, signMessage, signature
       });

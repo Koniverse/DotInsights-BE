@@ -4,6 +4,7 @@ import { Error } from 'mongoose';
 import moment from 'moment';
 
 import { relogRequestHandler } from '../../middleware/request-middleware';
+import { httpGetRequest } from '../../libs/http-request';
 
 const chainCache = require('memory-cache');
 const https = require('https');
@@ -17,27 +18,6 @@ const urlScanData = (chain: string) => `https://${chain}.api.subscan.io/api/scan
 
 const SUBSCAN_API_KEY = process.env.SUBSCAN_API_KEY || '';
 const LIMIT_UPDATE_DATA_CHAIN = process.env.LIMIT_UPDATE_DATA_CHAIN || 10;
-
-function httpGetRequest(url: string, body: string) {
-  return new Promise((resolve, reject) => {
-    const clientRequest = https.get(url, {}, (incomingMessage: IncomingMessage) => {
-      // Buffer the body entirely for processing as a whole.
-      const bodyChunks: any[] | readonly Uint8Array[] = [];
-      incomingMessage.on('data', (chunk: any) => {
-        // @ts-ignore
-        bodyChunks.push(chunk);
-      }).on('end', () => {
-        const response = Buffer.concat(bodyChunks);
-        // @ts-ignore
-        resolve(JSON.parse(response));
-      });
-    });
-    clientRequest.on('error', (error: Error) => {
-      reject(error);
-    });
-    clientRequest.end();
-  });
-}
 
 function querySubscanData(url: string, body: string) {
   let urlObject;
