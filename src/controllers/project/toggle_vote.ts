@@ -30,20 +30,6 @@ const isValidSignature = (address: string, signedMessage: string, signature: str
   }
 };
 
-const isCheckBalancesNetworks = (user: any) => {
-  const { enoughBalance } = user;
-  if (!enoughBalance) return false;
-  const data = JSON.parse(enoughBalance);
-  // eslint-disable-next-line no-restricted-syntax
-  for (const [key, value] of Object.entries(data)) {
-    const numberDot = new BN(Number(value));
-    if (numberDot.gt(new BN(MINIMUM_DOT_BALANCE * 10 ** 10))) {
-      return true;
-    }
-  }
-  return false;
-};
-
 const toggleVoteProjects: RequestHandler = async (req, res) => {
   const {
     project_id, signature, address
@@ -71,8 +57,7 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
 
     // Toggle vote
     if (!vote) {
-      const isCheckNetwork = isCheckBalancesNetworks(user);
-      if (!isCheckNetwork) {
+      if (!user.voteAbility) {
         return res.status(500).json({ message: `Required at least ${MINIMUM_DOT_BALANCE} DOT in balance for submit vote` });
       }
       const newVote = await Vote.create({

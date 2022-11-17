@@ -1,9 +1,12 @@
 import { RequestHandler } from 'express';
 import { isEthereumAddress } from '@polkadot/util-crypto';
+import { BN } from '@polkadot/util';
 import { relogRequestHandler } from '../../middleware/request-middleware';
 import { User } from '../../models/User';
 import { RANDOM_SALT } from './index';
 import { httpGetRequest } from '../../libs/http-request';
+
+const MINIMUM_DOT_BALANCE = Number(process.env.MINIMUM_DOT_BALANCE || 0);
 
 const urlBalances = (address: string, network: string) => `https://sub.id/api/v1/${address}/balances/${network}`;
 
@@ -14,7 +17,18 @@ export const getRandomInt = (minNum: number, maxNum: number) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-const getBalancesNetworks = async (address: string) => {
+const isCheckBalances = (balanceData: any) => {
+  // eslint-disable-next-line no-restricted-syntax
+  for (const [key, value] of Object.entries(balanceData)) {
+    const numberDot = new BN(String(value));
+    if (numberDot.gt(new BN(MINIMUM_DOT_BALANCE * 10 ** 10))) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const getBalances = async (address: string) => {
   const pros: any[] = [];
   const balances = {};
   const NETWORK_ETHEREUM = ['moonbeam', 'moonriver', 'astar', 'shiden'];
@@ -34,9 +48,9 @@ const getBalancesNetworks = async (address: string) => {
       data.forEach(key => {
         // eslint-disable-next-line no-restricted-syntax
         for (const [k, value] of Object.entries(key)) {
-          const { freeBalance }: any = Object.entries(value)[0][1];
+          const { totalBalance }: any = Object.entries(value)[0][1];
           // @ts-ignore
-          balances[k] = freeBalance;
+          balances[k] = totalBalance;
         }
       });
       return balances;
@@ -55,21 +69,27 @@ const getMessage: RequestHandler = async (req, res) => {
 
     const user = await User.findOne({ address });
 
-    const balances = await getBalancesNetworks(address);
-    const enoughBalance = JSON.stringify(balances);
+    const balances = await getBalances(address);
+    const voteAbility = isCheckBalances(balances);
+    const now = new Date();
+    const balanceData = JSON.stringify(balances);
     if (user === null) {
       const salt = getRandomInt(1, 999999999999);
       await User.create({
         address,
         salt,
-        enoughBalance,
+        balanceData,
+        voteAbility,
+        lastCheckBalanceTime: now,
         votedProjects: []
       });
-      res.status(200).json({ message: `${RANDOM_SALT} ${salt}` });
+      res.status(200).json({ message: `${RANDOM_SALT} ${salt}`, voteAbility });
     } else {
-      user.enoughBalance = enoughBalance;
+      user.balanceData = balanceData;
+      user.lastCheckBalanceTime = now;
+      user.voteAbility = voteAbility;
       user.save();
-      res.status(200).json({ message: `${RANDOM_SALT} ${user.salt}` });
+      res.status(200).json({ message: `${RANDOM_SALT} ${user.salt}`, voteAbility });
     }
   } catch (error) {
     // console.error(error);
