@@ -1,13 +1,62 @@
 import { RequestHandler } from 'express';
 import { recoverPersonalSignature } from '@metamask/eth-sig-util';
 import { decodeAddress, isEthereumAddress, signatureVerify } from '@polkadot/util-crypto';
-import { u8aToHex } from '@polkadot/util';
+import { BN, u8aToHex } from '@polkadot/util';
 import { relogRequestHandler } from '../../middleware/request-middleware';
 import { RANDOM_SALT } from './index';
 import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
-import { getBalances, isCheckBalances } from './messge';
+import { httpGetRequest } from '../../libs/http-request';
+
+const urlBalances = (address: string, network: string) => `https://sub.id/api/v1/${address}/balances/${network}`;
+
+const { CHECK_MULTICHAIN_BALANCE_NETWORK } = process.env;
+const isEnoughBalances = (balanceData: any) => {
+  // eslint-disable-next-line no-restricted-syntax
+  for (const [key, value] of Object.entries(balanceData)) {
+    const currentBalance = new BN(String(value));
+    if (currentBalance.gt(new BN(0))) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const getBalances = async (address: string) => {
+  const pros: any[] = [];
+  const balances = {};
+  const NETWORK_ETHEREUM = ['moonbeam', 'moonriver', 'astar', 'shiden'];
+  const isEthereum = isEthereumAddress(address);
+  if (CHECK_MULTICHAIN_BALANCE_NETWORK) {
+    const networks = CHECK_MULTICHAIN_BALANCE_NETWORK.split(',');
+    networks.forEach(network => {
+      if (NETWORK_ETHEREUM.includes(network) && isEthereum) {
+        pros.push(httpGetRequest(urlBalances(address, network), network));
+      } else if (!isEthereum && !['moonbeam', 'moonriver'].includes(network)) {
+        pros.push(httpGetRequest(urlBalances(address, network), network));
+      }
+    });
+
+    try {
+      const data = await Promise.all(pros);
+      data.forEach(key => {
+        // eslint-disable-next-line no-restricted-syntax
+        for (const [k, value] of Object.entries(key)) {
+          const { totalBalance }: any = Object.entries(value)[0][1];
+          // @ts-ignore
+          balances[k] = totalBalance;
+        }
+      });
+      return balances;
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
+      return false;
+    }
+  }
+  return false;
+};
 
 const isValidSignature = (address: string, signedMessage: string, signature: string): boolean => {
   if (isEthereumAddress(address)) {
@@ -59,7 +108,7 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
       let { voteAbility } = user;
       if (!voteAbility) {
         const balances = await getBalances(address);
-        voteAbility = isCheckBalances(balances);
+        voteAbility = isEnoughBalances(balances);
         if (voteAbility) {
           user.balanceData = JSON.stringify(balances);
           user.lastCheckBalanceTime = new Date();
