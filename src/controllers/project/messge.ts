@@ -20,8 +20,8 @@ export const getRandomInt = (minNum: number, maxNum: number) => {
 const isCheckBalances = (balanceData: any) => {
   // eslint-disable-next-line no-restricted-syntax
   for (const [key, value] of Object.entries(balanceData)) {
-    const numberDot = new BN(String(value));
-    if (numberDot.gt(new BN(MINIMUM_DOT_BALANCE * 10 ** 10))) {
+    const currentBalance = new BN(String(value));
+    if (currentBalance.gt(new BN(0))) {
       return true;
     }
   }

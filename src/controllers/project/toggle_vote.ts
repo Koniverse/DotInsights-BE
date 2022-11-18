@@ -58,7 +58,7 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
     // Toggle vote
     if (!vote) {
       if (!user.voteAbility) {
-        return res.status(500).json({ message: `Required at least ${MINIMUM_DOT_BALANCE} DOT in balance for submit vote` });
+        return res.status(500).json({ message: 'You need to have have balance on your account on any chain for submit a vote' });
       }
       const newVote = await Vote.create({
         project_id, address, signMessage, signature
