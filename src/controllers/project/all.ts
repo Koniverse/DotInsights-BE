@@ -4,7 +4,7 @@ import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 
 const getAllProjects: RequestHandler = async (req, res) => {
-  const projects = await Project.find();
+  const projects = await Project.find({ archived: { $ne: true } });
   const newList = await Promise.all(
     projects.map(async (el: any) => {
       const newEle = { ...el.toObject() };
