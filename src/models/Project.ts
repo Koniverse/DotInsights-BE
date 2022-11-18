@@ -30,6 +30,7 @@ export interface IProject extends Document {
   evm_compatible: boolean;
   subcategory: string;
   substrate_builders_programs: boolean;
+  archived: boolean;
   vote_count: number;
 }
 
@@ -62,6 +63,7 @@ const schema = new Schema({
   evm_compatible: { type: 'boolean' },
   subcategory: { type: 'string' },
   substrate_builders_programs: { type: 'boolean' },
+  archived: { type: 'boolean' },
   vote_count: { type: 'number', default: 0, required: true }
 });
 
