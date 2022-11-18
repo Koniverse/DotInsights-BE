@@ -196,7 +196,7 @@ const getDataPolkadot: (chain: string) => Promise<{
   });
 };
 
-const getDataAccountDaily = async (chain: string) => {
+const getDataAccountDaily = async (chain: string, category = 'NewAccount') => {
   const now = moment().utc();
   const yesterday = moment().utc().subtract(1, 'd');
   const stringTimeNow = now.format('YYYY-MM-DD');
@@ -205,7 +205,7 @@ const getDataAccountDaily = async (chain: string) => {
     start: stringTimeYesterday,
     end: stringTimeNow,
     format: 'hour',
-    category: 'NewAccount'
+    category
   });
 
   return new Promise((resolve, reject) => {
@@ -273,14 +273,15 @@ const getData: RequestHandler = async (req, res) => {
   } = req.params;
   const requestMetaSubscan = retryPromise(getDataMeta(chain), 3);
   const requestAccountDaily = retryPromise(getDataAccountDaily(chain), 3);
+  const requestExtrinsicsDaily = retryPromise(getDataAccountDaily(chain, 'extrinsic'), 3);
   const requestTransferChange = retryPromise(getTransferChange(chain), 3);
   try {
-    const [metaSubScan, accountDaily, transferChange] = await Promise.all([requestMetaSubscan, requestAccountDaily, requestTransferChange]);
+    const [metaSubScan, accountDaily, transferChange, extrinsicsChange] = await Promise.all([requestMetaSubscan, requestAccountDaily, requestTransferChange, requestExtrinsicsDaily]);
     const {
       finalizedBlockNum, countSignedExtrinsic, accounts, transfers, blockNum
     } = metaSubScan;
     const { countBlockChange, blockNumYesterday } = transferChange;
-    const extrinsicsChange = await retryPromise(getExtrinsicsChange(chain, `${blockNumYesterday}-${blockNum}`), 3);
+    // const extrinsicsChange = await retryPromise(getExtrinsicsChange(chain, `${blockNumYesterday}-${blockNum}`), 3);
     const dataSend = {
       accounts,
       accounts_change_24h: accountDaily,
