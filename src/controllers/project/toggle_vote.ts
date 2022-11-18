@@ -117,7 +117,7 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
         }
       }
       if (!voteAbility) {
-        return res.status(500).json({ message: 'You need to have have balance on your account on any chain for submit a vote' });
+        return res.status(500).json({ message: 'Insufficient balance. Make sure you have some balance on any chain before submitting votes' });
       }
       const newVote = await Vote.create({
         project_id, address, signMessage, signature
