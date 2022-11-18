@@ -6,8 +6,6 @@ import { User } from '../../models/User';
 import { RANDOM_SALT } from './index';
 import { httpGetRequest } from '../../libs/http-request';
 
-const MINIMUM_DOT_BALANCE = Number(process.env.MINIMUM_DOT_BALANCE || 0);
-
 const urlBalances = (address: string, network: string) => `https://sub.id/api/v1/${address}/balances/${network}`;
 
 const { CHECK_MULTICHAIN_BALANCE_NETWORK } = process.env;
@@ -17,18 +15,18 @@ export const getRandomInt = (minNum: number, maxNum: number) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-const isCheckBalances = (balanceData: any) => {
+export const isCheckBalances = (balanceData: any) => {
   // eslint-disable-next-line no-restricted-syntax
   for (const [key, value] of Object.entries(balanceData)) {
-    const numberDot = new BN(String(value));
-    if (numberDot.gt(new BN(MINIMUM_DOT_BALANCE * 10 ** 10))) {
+    const currentBalance = new BN(String(value));
+    if (currentBalance.gt(new BN(0))) {
       return true;
     }
   }
   return false;
 };
 
-const getBalances = async (address: string) => {
+export const getBalances = async (address: string) => {
   const pros: any[] = [];
   const balances = {};
   const NETWORK_ETHEREUM = ['moonbeam', 'moonriver', 'astar', 'shiden'];

@@ -1,14 +1,13 @@
 import { RequestHandler } from 'express';
 import { recoverPersonalSignature } from '@metamask/eth-sig-util';
 import { decodeAddress, isEthereumAddress, signatureVerify } from '@polkadot/util-crypto';
-import { BN, u8aToHex } from '@polkadot/util';
+import { u8aToHex } from '@polkadot/util';
 import { relogRequestHandler } from '../../middleware/request-middleware';
 import { RANDOM_SALT } from './index';
 import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
-
-const MINIMUM_DOT_BALANCE = Number(process.env.MINIMUM_DOT_BALANCE || 0);
+import { getBalances, isCheckBalances } from './messge';
 
 const isValidSignature = (address: string, signedMessage: string, signature: string): boolean => {
   if (isEthereumAddress(address)) {
@@ -57,8 +56,19 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
 
     // Toggle vote
     if (!vote) {
-      if (!user.voteAbility) {
-        return res.status(500).json({ message: `Required at least ${MINIMUM_DOT_BALANCE} DOT in balance for submit vote` });
+      let { voteAbility } = user;
+      if (!voteAbility) {
+        const balances = await getBalances(address);
+        voteAbility = isCheckBalances(balances);
+        if (voteAbility) {
+          user.balanceData = JSON.stringify(balances);
+          user.lastCheckBalanceTime = new Date();
+          user.voteAbility = voteAbility;
+          user.save();
+        }
+      }
+      if (!voteAbility) {
+        return res.status(500).json({ message: 'You need to have have balance on your account on any chain for submit a vote' });
       }
       const newVote = await Vote.create({
         project_id, address, signMessage, signature
