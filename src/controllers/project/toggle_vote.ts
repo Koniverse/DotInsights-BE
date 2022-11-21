@@ -59,14 +59,15 @@ const getBalances = async (address: string) => {
 };
 
 const isValidSignature = (address: string, signedMessage: string, signature: string): boolean => {
-  if (isEthereumAddress(address)) {
-    const recoveredAddress = recoverPersonalSignature({
-      data: signedMessage,
-      signature
-    });
-    return recoveredAddress.toLocaleLowerCase() === address.toLocaleLowerCase();
-  }
   try {
+    if (isEthereumAddress(address)) {
+      const recoveredAddress = recoverPersonalSignature({
+        data: signedMessage,
+        signature
+      });
+      return recoveredAddress.toLocaleLowerCase() === address.toLocaleLowerCase();
+    }
+
     const publicKey = decodeAddress(address);
     const hexPublicKey = u8aToHex(publicKey);
 
