@@ -3,12 +3,11 @@ import {
 } from 'mongoose';
 
 export interface IVote extends Document {
-  /** Name of the Vote */
-  /** Name of the author */
   address: string;
   project_id: string;
   signMessage: string;
   signature: string;
+  create_date: Date;
 }
 
 interface IVoteModel extends Model<IVote> {}
@@ -17,7 +16,8 @@ const schema = new Schema({
   address: { type: String, index: true },
   project_id: { type: String, required: true, index: true },
   signMessage: { type: String },
-  signature: { type: String }
+  signature: { type: String },
+  create_date: { type: String }
 });
 
 export const Vote: IVoteModel = model<IVote, IVoteModel>(

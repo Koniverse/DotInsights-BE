@@ -15,11 +15,13 @@ const getMessage: RequestHandler = async (req, res) => {
 
     const user = await User.findOne({ address });
     if (user === null) {
+      const now = new Date();
       const salt = getRandomInt(1, 999999999999);
       await User.create({
         address,
         salt,
-        votedProjects: []
+        votedProjects: [],
+        create_date: now
       });
       res.status(200).json({ message: `${RANDOM_SALT} ${salt}` });
     } else {
