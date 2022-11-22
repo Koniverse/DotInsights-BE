@@ -120,9 +120,9 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
       if (!voteAbility) {
         return res.status(500).json({ message: 'Insufficient balance. Make sure you have some balance on any chain before submitting votes.' });
       }
-      const now = new Date();
+      const createDate = new Date();
       const newVote = await Vote.create({
-        project_id, address, signMessage, signature, create_date: now
+        project_id, address, signMessage, signature, createDate
       });
 
       newVote.save();

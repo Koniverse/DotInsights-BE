@@ -7,7 +7,7 @@ export interface IUser extends Document {
   balanceData: string;
   lastCheckBalanceTime: Date;
   voteAbility: boolean,
-  create_date: Date;
+  createDate: Date;
   salt: number;
   votedProjects: [string]
 }
@@ -18,7 +18,7 @@ const schema = new Schema({
   address: { type: String, required: true, index: true },
   salt: { type: Number, required: true },
   balanceData: { type: String },
-  create_date: { type: String },
+  createDate: { type: String },
   lastCheckBalanceTime: { type: String },
   voteAbility: { type: Boolean },
   votedProjects: { type: [String] }
