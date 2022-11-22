@@ -7,7 +7,7 @@ export interface IVote extends Document {
   project_id: string;
   signMessage: string;
   signature: string;
-  create_date: Date;
+  createDate: Date;
 }
 
 interface IVoteModel extends Model<IVote> {}
@@ -17,7 +17,7 @@ const schema = new Schema({
   project_id: { type: String, required: true, index: true },
   signMessage: { type: String },
   signature: { type: String },
-  create_date: { type: String }
+  createDate: { type: String }
 });
 
 export const Vote: IVoteModel = model<IVote, IVoteModel>(
