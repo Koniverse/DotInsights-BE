@@ -8,8 +8,25 @@ import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
 import { httpGetRequest } from '../../libs/http-request';
+import { substrateProvider } from '../../app';
 
 const urlBalances = (address: string, network: string) => `https://sub.id/api/v1/${address}/balances/${network}`;
+const getBalancesAleptZeroNetwork = async (address: string) => new Promise((resolve, reject) => {
+  const api = substrateProvider.getApiConnected();
+  api.query.system.account(address).then(balance => {
+  // @ts-ignore
+    const { data } = balance.toHuman();
+    const { free } = data;
+    const totalBalance = new BN(free.replaceAll(',', '')).toString();
+    resolve({
+      alept_zero: {
+        alept_zero: {
+          totalBalance
+        }
+      }
+    });
+  });
+});
 
 const { CHECK_MULTICHAIN_BALANCE_NETWORK } = process.env;
 const isEnoughBalances = (balanceData: any) => {
@@ -23,10 +40,9 @@ const isEnoughBalances = (balanceData: any) => {
   return false;
 };
 
-const getBalances = async (address: string, req: any) => {
+const getBalances = async (address: string) => {
   const pros: any[] = [];
   const balances = {};
-  const anotherBalancesUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}/checkBalances/${address}`;
   const NETWORK_ETHEREUM = ['moonbeam', 'moonriver', 'astar', 'shiden'];
   const isEthereum = isEthereumAddress(address);
   if (CHECK_MULTICHAIN_BALANCE_NETWORK) {
@@ -40,7 +56,7 @@ const getBalances = async (address: string, req: any) => {
     });
 
     if (!isEthereum) {
-      pros.push(httpGetRequest(anotherBalancesUrl, 'another'));
+      pros.push(getBalancesAleptZeroNetwork(address));
     }
 
     try {
@@ -113,7 +129,7 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
     if (!vote) {
       let { voteAbility } = user;
       if (!voteAbility) {
-        const balances = await getBalances(address, req);
+        const balances = await getBalances(address);
         voteAbility = isEnoughBalances(balances);
         if (voteAbility) {
           user.balanceData = JSON.stringify(balances);
