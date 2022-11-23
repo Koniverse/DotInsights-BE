@@ -23,9 +23,10 @@ const isEnoughBalances = (balanceData: any) => {
   return false;
 };
 
-const getBalances = async (address: string) => {
+const getBalances = async (address: string, req: any) => {
   const pros: any[] = [];
   const balances = {};
+  const anotherBalancesUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}/checkBalances/${address}`;
   const NETWORK_ETHEREUM = ['moonbeam', 'moonriver', 'astar', 'shiden'];
   const isEthereum = isEthereumAddress(address);
   if (CHECK_MULTICHAIN_BALANCE_NETWORK) {
@@ -37,6 +38,10 @@ const getBalances = async (address: string) => {
         pros.push(httpGetRequest(urlBalances(address, network), network));
       }
     });
+
+    if (!isEthereum) {
+      pros.push(httpGetRequest(anotherBalancesUrl, 'another'));
+    }
 
     try {
       const data = await Promise.all(pros);
@@ -108,7 +113,7 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
     if (!vote) {
       let { voteAbility } = user;
       if (!voteAbility) {
-        const balances = await getBalances(address);
+        const balances = await getBalances(address, req);
         voteAbility = isEnoughBalances(balances);
         if (voteAbility) {
           user.balanceData = JSON.stringify(balances);

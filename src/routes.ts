@@ -19,6 +19,7 @@ router.post('/getMessage', ProjectController.message);
 router.post('/toggleVoteProject', ProjectController.toggleVote);
 router.post('/getVotedProject', ProjectController.allVote);
 router.get('/chainData/:chain', cache('1 minutes'), ChainDataController.data);
+router.get('/checkBalances/:address', ChainDataController.checkBalances);
 router.get('/getVoteCount', ProjectController.voteCount);
 router.post('/createDemo', DemoDataController.create);
 router.post('/removeDemo', DemoDataController.remove);
