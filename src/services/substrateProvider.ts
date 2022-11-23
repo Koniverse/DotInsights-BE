@@ -30,6 +30,25 @@ class ApiSubstrate {
   }
 }
 
+export class AzeroProvider {
+  listAPi: ApiSubstrate[] = [];
+
+  constructor() {
+    const api = new ApiSubstrate('wss://ws.azero.dev');
+    this.listAPi.push(api);
+  }
+
+  getApiConnected() {
+    for (let i = 0; i < this.listAPi.length; i += 1) {
+      const api = this.listAPi[i];
+      if (api.isConnected) {
+        return api.api;
+      }
+    }
+    return null;
+  };
+}
+
 export class SubstrateProvider {
   listAPi: ApiSubstrate[] = [];
 

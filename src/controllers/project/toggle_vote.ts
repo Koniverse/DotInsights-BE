@@ -8,11 +8,11 @@ import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
 import { httpGetRequest } from '../../libs/http-request';
-import { substrateProvider } from '../../app';
+import { azeroProvider } from '../../app';
 
 const urlBalances = (address: string, network: string) => `https://sub.id/api/v1/${address}/balances/${network}`;
 const getBalancesAleptZeroNetwork = async (address: string) => new Promise((resolve, reject) => {
-  const api = substrateProvider.getApiConnected();
+  const api = azeroProvider.getApiConnected();
   api.query.system.account(address).then(balance => {
   // @ts-ignore
     const { data } = balance.toHuman();
