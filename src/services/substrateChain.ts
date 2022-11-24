@@ -2,14 +2,14 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 
 const POLKADOT_ENDPOINTS = process.env.POLKADOT_ENDPOINTS || null;
-export const endpointMapNetwork = {
-  aleptZero: 'wss://ws.azero.dev',
-  ternoa: 'wss://mainnet.ternoa.network',
-  edgeware: 'wss://edgeware-rpc.dwellir.com',
-  polkadex: 'wss://mainnet.polkadex.trade'
+export const CHAIN_ENDPOINT_MAP = {
+  aleptZero: ['wss://ws.azero.dev'],
+  ternoa: ['wss://mainnet.ternoa.network'],
+  edgeware: ['wss://edgeware-rpc.dwellir.com'],
+  polkadex: ['wss://mainnet.polkadex.trade']
 };
 
-class ApiSubstrate {
+class SubstrateApi {
   endPoint: string;
 
   api: ApiPromise;
@@ -45,20 +45,17 @@ class ApiSubstrate {
   }
 }
 
-export class SubstrateProvider {
-  apiSubstrate: ApiSubstrate;
+export class SubstrateChain {
+  substrateApis: SubstrateApi[];
 
   name: string;
 
-  constructor(endPoint: string, name: string) {
-    this.apiSubstrate = new ApiSubstrate(endPoint);
+  constructor(endPoints: string[], name: string) {
+    this.substrateApis = endPoints.map(endPoint => new SubstrateApi(endPoint));
     this.name = name;
   }
 
-  getApiConnected() {
-    if (this.apiSubstrate.isConnected) {
-      return this.apiSubstrate.api;
-    }
-    return null;
+  getConnectedApi(): SubstrateApi {
+    return this.substrateApis?.find(sApi => sApi.api.isConnected);
   };
 }
