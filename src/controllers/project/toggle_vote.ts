@@ -129,9 +129,9 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
     // Validate signature
     // const oldSignMessage = `${RANDOM_SALT} ${user.salt}`;
     const signMessage = `${RANDOM_SALT} ${user.salt}-${project_id}`;
-    // if (!isValidSignature(address, signMessage, signature)) {
-    //   return res.status(500).json({ message: 'Wrong signature!' });
-    // }
+    if (!isValidSignature(address, signMessage, signature)) {
+      return res.status(500).json({ message: 'Wrong signature!' });
+    }
     // End validate signature
 
     // Toggle vote
