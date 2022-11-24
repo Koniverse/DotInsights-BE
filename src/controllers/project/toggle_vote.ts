@@ -8,8 +8,25 @@ import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
 import { httpGetRequest } from '../../libs/http-request';
+import { azeroProvider } from '../../app';
 
 const urlBalances = (address: string, network: string) => `https://sub.id/api/v1/${address}/balances/${network}`;
+const getBalancesAleptZeroNetwork = async (address: string) => new Promise((resolve, reject) => {
+  const api = azeroProvider.getApiConnected();
+  api.query.system.account(address).then(balance => {
+  // @ts-ignore
+    const { data } = balance.toHuman();
+    const { free } = data;
+    const totalBalance = new BN(free.replaceAll(',', '')).toString();
+    resolve({
+      alept_zero: {
+        alept_zero: {
+          totalBalance
+        }
+      }
+    });
+  });
+});
 
 const { CHECK_MULTICHAIN_BALANCE_NETWORK } = process.env;
 const isEnoughBalances = (balanceData: any) => {
@@ -37,6 +54,10 @@ const getBalances = async (address: string) => {
         pros.push(httpGetRequest(urlBalances(address, network), network));
       }
     });
+
+    if (!isEthereum) {
+      pros.push(getBalancesAleptZeroNetwork(address));
+    }
 
     try {
       const data = await Promise.all(pros);
