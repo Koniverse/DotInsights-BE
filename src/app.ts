@@ -3,7 +3,7 @@ import compression from 'compression';
 import path from 'path';
 import express from 'express';
 import { router } from './routes';
-import { AzeroProvider, SubstrateProvider } from './services/substrateProvider';
+import { endpointMapNetwork, SubstrateProvider } from './services/substrateProvider';
 
 export const app = express();
 
@@ -20,4 +20,9 @@ app.set('port', process.env.PORT || 3000);
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }));
 
 app.use('/api', router);
-export const azeroProvider = new AzeroProvider();
+export const substrateProviderMap = {};
+// eslint-disable-next-line no-restricted-syntax
+for (const [key, value] of Object.entries(endpointMapNetwork)) {
+  // @ts-ignore
+  substrateProviderMap[key] = new SubstrateProvider(value, key);
+}

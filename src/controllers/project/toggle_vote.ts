@@ -8,27 +8,41 @@ import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
 import { httpGetRequest } from '../../libs/http-request';
-import { azeroProvider } from '../../app';
-
-const urlBalances = (address: string, network: string) => `https://sub.id/api/v1/${address}/balances/${network}`;
-const getBalancesAleptZeroNetwork = async (address: string) => new Promise((resolve, reject) => {
-  const api = azeroProvider.getApiConnected();
-  api.query.system.account(address).then(balance => {
-  // @ts-ignore
-    const { data } = balance.toHuman();
-    const { free } = data;
-    const totalBalance = new BN(free.replaceAll(',', '')).toString();
-    resolve({
-      alept_zero: {
-        alept_zero: {
-          totalBalance
-        }
-      }
-    });
-  });
-});
+import { substrateProviderMap } from '../../app';
+import { SubstrateProvider } from '../../services/substrateProvider';
 
 const { CHECK_MULTICHAIN_BALANCE_NETWORK } = process.env;
+
+const urlBalances = (address: string, network: string) => `https://sub.id/api/v1/${address}/balances/${network}`;
+const getDataResponse = (name: string, totalBalance: string) => {
+  const response = new Map();
+  const dataTotal = new Map();
+  dataTotal.set(name, { totalBalance });
+  response.set(name, Object.fromEntries(dataTotal));
+  return Object.fromEntries(response);
+};
+const getBalancesSubstrateNetwork = async (substrateProvider: SubstrateProvider, address: string) => new Promise((resolve, reject) => {
+  const api = substrateProvider.getApiConnected();
+  const { name } = substrateProvider;
+  if (api) {
+    try {
+      api.query.system.account(address).then(balance => {
+        try {
+          // @ts-ignore
+          const { data } = balance.toHuman();
+          const { free } = data;
+          const totalBalance = new BN(free.replaceAll(',', '')).toString();
+          resolve(getDataResponse(name, totalBalance));
+        } catch (e) {
+          resolve(getDataResponse(name, '0'));
+        }
+      });
+    } catch (e) {
+      resolve(getDataResponse(name, '0'));
+    }
+  }
+});
+
 const isEnoughBalances = (balanceData: any) => {
   // eslint-disable-next-line no-restricted-syntax
   for (const [key, value] of Object.entries(balanceData)) {
@@ -56,7 +70,11 @@ const getBalances = async (address: string) => {
     });
 
     if (!isEthereum) {
-      pros.push(getBalancesAleptZeroNetwork(address));
+      // eslint-disable-next-line no-restricted-syntax
+      for (const [key, substrate] of Object.entries(substrateProviderMap)) {
+        // @ts-ignore
+        pros.push(getBalancesSubstrateNetwork(substrate, address));
+      }
     }
 
     try {
