@@ -5,19 +5,19 @@
 # https://aka.ms/yaml
 
 trigger:
-- dev
+- azure-pipelines
 
 pool:
-  name: "demo"
+  name: "Default"
 jobs:
-  - job: Job_1
+  - job: Job_Backend_Test
     displayName: Agent 1
-    pool: "demo"
+    pool: "Default"
     steps:
     - task: PythonScript@0
       inputs:
         scriptSource: 'inline'
-        pythonInterpreter: /Library/Frameworks/Python.framework/Versions/3.7/bin/python3
+        pythonInterpreter: /usr/bin/python3
         script: |
           import requests #dependency
           
@@ -28,7 +28,7 @@ jobs:
           }
           data["embeds"] = [
               {
-                  "description" : "Build Start in Branch Dev ",
+                  "description" : "Build Backend Start in Branch Dev ",
               }
           ]
           
@@ -40,18 +40,18 @@ jobs:
               print(err)
     - task: SSH@0
       inputs:
-        sshEndpoint: 'SSH Stage'
+        sshEndpoint: 'CDM Server Stage'
         runOptions: 'inline'
         inline: |
           cd /home/ubuntu/DotInsights-BE-TEST/
-          git pull
+          git pull > /dev/null 2>&1
           sudo docker-compose down > /dev/null 2>&1
           sudo docker-compose up -d > /dev/null 2>&1
         readyTimeout: '20000'
     - task: PythonScript@0
       inputs:
         scriptSource: 'inline'
-        pythonInterpreter: /Library/Frameworks/Python.framework/Versions/3.7/bin/python3
+        pythonInterpreter: /usr/bin/python3
         script: |
           import requests #dependency
           url = "https://discord.com/api/webhooks/1043378904515235890/jblsnPli7C08ZLaxr-FabTZpXaOgSbKn-rQC2CUMsV3X8J1Y1Yy2nzyEAERsl8BpejnK"
@@ -61,7 +61,7 @@ jobs:
           }
           data["embeds"] = [
               {
-                  "description" : "Build Succeeded",
+                  "description" : "Build Backend Succeeded",
               }
           ]
 
