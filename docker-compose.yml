@@ -15,7 +15,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: mongo
       MONGO_INITDB_ROOT_PASSWORD: qweqwe123
     ports:
-      - 9001:27017
+      - 11192:27017
     volumes:
       - mongodata:/data/db
     networks:
@@ -32,7 +32,7 @@ services:
     command: node ./dist/server.js
     # command: tail -f /dev/null
     ports:
-      - 9000:9000
+      - 9192:9000
     networks:
       - mongo_net
 
