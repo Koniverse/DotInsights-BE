@@ -21,7 +21,8 @@ const getMessage: RequestHandler = async (req, res) => {
         address,
         salt,
         votedProjects: [],
-        createDate
+        createDate,
+        createTime: createDate
       });
       res.status(200).json({ message: `${RANDOM_SALT} ${salt}` });
     } else {

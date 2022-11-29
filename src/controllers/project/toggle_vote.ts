@@ -152,7 +152,7 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
       }
       const createDate = new Date();
       const newVote = await Vote.create({
-        project_id, address, signMessage, signature, createDate
+        project_id, address, signMessage, signature, createDate, createTime: createDate
       });
 
       newVote.save();
