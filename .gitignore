@@ -126,3 +126,4 @@ Temporary Items
 dist
 data
 .idea
+docker-compose.yml
