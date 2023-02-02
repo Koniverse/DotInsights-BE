@@ -5,7 +5,7 @@ const POLKADOT_ENDPOINTS = process.env.POLKADOT_ENDPOINTS || null;
 export const CHAIN_ENDPOINT_MAP = {
   aleptZero: ['wss://ws.azero.dev'],
   ternoa: ['wss://mainnet.ternoa.network'],
-  edgeware: ['wss://edgeware-rpc.dwellir.com'],
+  // edgeware: ['wss://edgeware-rpc.dwellir.com'],
   polkadex: ['wss://mainnet.polkadex.trade']
 };
 
