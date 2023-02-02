@@ -32,6 +32,8 @@ export interface IProject extends Document {
   substrate_builders_programs: boolean;
   archived: boolean;
   vote_count: number;
+  github: string;
+  project_slug: string;
 }
 
 interface IProjectModel extends Model<IProject> { }

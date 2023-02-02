@@ -1,16 +1,26 @@
 import { RequestHandler } from 'express';
 import { relogRequestHandler } from '../../middleware/request-middleware';
-import { Project } from '../../models/Project';
-import { Vote } from '../../models/Vote';
+import { IProject, Project } from '../../models/Project';
 
 const getAllProjects: RequestHandler = async (req, res) => {
   const projects = await Project.find({ archived: { $in: [false, null] } });
   const newList = await Promise.all(
-    projects.map(async (el: any) => {
-      const newEle = { ...el.toObject() };
-      delete newEle['_id'];
-      delete newEle['__v'];
-      return newEle;
+    projects.map((el: any) => {
+      const rawEl = el.toObject() as IProject;
+      const newEl = {
+        project_id: rawEl.project_id,
+        project_slug: rawEl.project_slug,
+        project: rawEl.project,
+        category: rawEl.category,
+        layer: rawEl.layer,
+        native: rawEl.native,
+        token: rawEl.token,
+        twitter: rawEl.twitter,
+        github: rawEl.github,
+        website: rawEl.website,
+        vote_count: rawEl.vote_count
+      };
+      return newEl;
     })
   );
 
