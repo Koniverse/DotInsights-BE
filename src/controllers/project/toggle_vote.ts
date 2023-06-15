@@ -72,10 +72,17 @@ const getBalances = async (address: string) => {
     try {
       const data = await Promise.all(checkBalancePromises);
       data.forEach(balance => {
+        let total = new BN(0);
         Object.entries(balance).forEach(([k, value]) => {
-          const { totalBalance }: any = Object.entries(value)[0][1];
+          Object.entries(value).forEach((val, index) =>  {
+            const { totalBalance }: any = val[1];
+            if (totalBalance){
+              total = total.add(new BN(totalBalance));
+            }
+          })
+          // const { totalBalance }: any = Object.entries(value)[0][1];
           // @ts-ignore
-          balances[k] = totalBalance;
+          balances[k] = total.toString();
         });
       });
       return balances;
