@@ -23,6 +23,7 @@ router.get('/chainData/:chain', cache('1 minutes'), ChainDataController.data);
 router.get('/getVoteCount', ProjectController.voteCount);
 router.post('/createDemo', DemoDataController.create);
 router.post('/removeDemo', DemoDataController.remove);
+router.post('/checkBalanceSubscan', ProjectController.checkBalance);
 // if (process.env.NODE_ENV === 'development') {
 //   router.use('/dev/api-docs', swaggerUi.serve);
 //   router.get('/dev/api-docs', swaggerUi.setup(apiSpec));

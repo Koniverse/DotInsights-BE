@@ -6,3 +6,4 @@ export { message } from './messge';
 export { upsert } from './upsert';
 export { allVote } from './all_vote';
 export { voteCount } from './vote_count';
+export { checkBalance } from './check_balance';

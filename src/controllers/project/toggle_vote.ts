@@ -7,13 +7,13 @@ import { RANDOM_SALT } from './index';
 import { Project } from '../../models/Project';
 import { Vote } from '../../models/Vote';
 import { User } from '../../models/User';
-import { httpGetRequest } from '../../libs/http-request';
 import { SubstrateChain } from '../../services/substrateChain';
 import { substrateApiMap } from '../../app';
+import { getBalancesFromSubscan } from '../../libs/subscan';
 
 const { CHECK_MULTICHAIN_BALANCE_NETWORK } = process.env;
 
-const urlBalances = (address: string, network: string) => `https://sub.id/api/v1/${address}/balances/${network}`;
+// const urlBalances = (address: string, network: string) => `https://sub.id/api/v1/${address}/balances/${network}`;
 const getDataResponse = (name: string, totalBalance: string) => {
   const response = new Map();
   const dataTotal = new Map();
@@ -51,18 +51,9 @@ const isEnoughBalances = (balanceData: any) => {
 const getBalances = async (address: string) => {
   const checkBalancePromises: any[] = [];
   const balances = {};
-  const NETWORK_ETHEREUM = ['moonbeam', 'moonriver', 'astar', 'shiden'];
   const isEthereum = isEthereumAddress(address);
   if (CHECK_MULTICHAIN_BALANCE_NETWORK) {
-    const networks = CHECK_MULTICHAIN_BALANCE_NETWORK.split(',');
-    networks.forEach(network => {
-      if (NETWORK_ETHEREUM.includes(network) && isEthereum) {
-        checkBalancePromises.push(httpGetRequest(urlBalances(address, network), network));
-      } else if (!isEthereum && !['moonbeam', 'moonriver'].includes(network)) {
-        checkBalancePromises.push(httpGetRequest(urlBalances(address, network), network));
-      }
-    });
-
+    checkBalancePromises.push(getBalancesFromSubscan(address));
     if (!isEthereum) {
       Object.values(substrateApiMap).forEach(substrateApi => {
         checkBalancePromises.push(getBalanceFromSubstrateApi(substrateApi, address));
@@ -74,12 +65,12 @@ const getBalances = async (address: string) => {
       data.forEach(balance => {
         let total = new BN(0);
         Object.entries(balance).forEach(([k, value]) => {
-          Object.entries(value).forEach((val, index) =>  {
+          Object.entries(value).forEach((val, index) => {
             const { totalBalance }: any = val[1];
-            if (totalBalance){
+            if (totalBalance) {
               total = total.add(new BN(totalBalance));
             }
-          })
+          });
           // const { totalBalance }: any = Object.entries(value)[0][1];
           // @ts-ignore
           balances[k] = total.toString();
@@ -178,5 +169,4 @@ const toggleVoteProjects: RequestHandler = async (req, res) => {
     project_id: project.project_id, vote_count: project.vote_count, address: user.address, isVote: !vote
   });
 };
-
 export const toggleVote = relogRequestHandler(toggleVoteProjects, { skipJwtAuth: true });
