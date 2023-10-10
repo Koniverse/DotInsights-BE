@@ -1,3 +1,5 @@
+import fetch from 'node-fetch';
+
 const SUBSCAN_URL = process.env.SUBSCAN_URL || 'https://polkadot.api.subscan.io';
 
 export const getBalancesFromSubscan = async (address: string): Promise<Record<string, object>> => {
