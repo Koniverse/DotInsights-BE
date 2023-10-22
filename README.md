@@ -49,7 +49,7 @@ sequenceDiagram
     DotInsightsFE->>-User: Show Vote Result
 ```
 
-## New Project Concept
+## Add New Project Concept
 Here is the main concept of voting for DotInsights.
 ```mermaid
 flowchart LR
