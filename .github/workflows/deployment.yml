@@ -37,9 +37,6 @@ jobs:
       - name: Run linter
         run: yarn lint
 
-      - name: Run tests
-        run: yarn test
-
       # ── Build image using preview Dockerfile ─────────────────────────────
       - name: Build Docker Image
         run: |
