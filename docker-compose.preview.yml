@@ -6,7 +6,7 @@ services:
     image: ghcr.io/koniverse/dot-insights-be:latest
     env_file:
       - .env
-    command: node dist/src/server.js
+    command: node dist/server.js
     deploy:
       replicas: 1
       restart_policy:

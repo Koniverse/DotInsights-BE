@@ -32,4 +32,4 @@ COPY src/public ./src/public
 EXPOSE 3000
 
 # Start production server
-CMD ["node", "dist/src/server.js"]
+CMD ["node", "dist/server.js"]
