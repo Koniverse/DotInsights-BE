@@ -32,6 +32,14 @@ if (process.env.MONGO_URL == null) {
   });
 }
 
+// Catch unhandled promise rejections (e.g. Polkadot WS connection failures)
+process.on('unhandledRejection', (reason) => {
+  logger.log({
+    level: 'warn',
+    message: `Unhandled Rejection: ${reason}`
+  });
+});
+
 // Close the Mongoose connection, when receiving SIGINT
 process.on('SIGINT', () => {
   logger.info('Gracefully shutting down');

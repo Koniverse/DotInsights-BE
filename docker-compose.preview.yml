@@ -1,16 +1,14 @@
-version: "3.8"
-
 services:
   # ── DotInsights BE Server ────────────────────────────────────────────────────
   dot-insights:
     image: ghcr.io/koniverse/dot-insights-be:latest
     env_file:
       - .env
+    environment:
+      # Override MONGO_URL for Docker networking (service name: mongo)
+      MONGO_URL: mongodb://mongo:qweqwe123@mongo:27017/dot_insights?authSource=admin
     command: node dist/server.js
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: any
+    restart: unless-stopped
     depends_on:
       - mongo
     ports:
@@ -31,9 +29,7 @@ services:
       - mongo-data:/data/db
     ports:
       - "9000:27017"
-    deploy:
-      restart_policy:
-        condition: any
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:

@@ -20,25 +20,31 @@ class SubstrateApi {
     this.endPoint = endPoint;
     try {
       const apiPromise = new ApiPromise({ provider: new WsProvider(endPoint) });
-      apiPromise.isReady.then(data => {
-        this.isConnected = true;
-        this.api = data;
-        this.api.on('connected', (): void => {
+      apiPromise.isReady
+        .then(data => {
           this.isConnected = true;
+          this.api = data;
+          this.api.on('connected', (): void => {
+            this.isConnected = true;
+            // eslint-disable-next-line no-console
+            console.log('API has been connected to the endpoint');
+          });
+          this.api.on('ready', (): void => {
+            this.isConnected = true;
+            // eslint-disable-next-line no-console
+            console.log('API has been ready to the endpoint');
+          });
+          this.api.on('disconnected', (): void => {
+            // eslint-disable-next-line no-console
+            console.log('API has been disconnected to the endpoint');
+            this.isConnected = false;
+          });
+        })
+        .catch((err: any) => {
           // eslint-disable-next-line no-console
-          console.log('API has been connected to the endpoint');
-        });
-        this.api.on('ready', (): void => {
-          this.isConnected = true;
-          // eslint-disable-next-line no-console
-          console.log('API has been ready to the endpoint');
-        });
-        this.api.on('disconnected', (): void => {
-          // eslint-disable-next-line no-console
-          console.log('API has been disconnected to the endpoint');
+          console.log(`Failed to connect to endpoint ${endPoint}: ${err}`);
           this.isConnected = false;
         });
-      });
     } catch (e) {
       this.isConnected = false;
     }
