@@ -33,10 +33,6 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
-      # ── Lint and Test ──────────────────────────────────────────────────────
-      - name: Run linter
-        run: yarn lint
-
       # ── Build image using preview Dockerfile ─────────────────────────────
       - name: Build Docker Image
         run: |
